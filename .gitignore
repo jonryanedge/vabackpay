@@ -1,5 +1,18 @@
+# Environment variables (contains secrets)
 .env
+
+# Binary output
+vabackpay
+
+# Data files
 *.json
 emails.txt
+
+# Logs
 server.log
-main
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
