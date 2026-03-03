@@ -1,0 +1,30 @@
+{{if .YearlyData}}
+<div class="total-backpay">
+	<h2>Total Backpay</h2>
+	<div class="amount">${{formatCurrency .TotalBackpay}}</div>
+</div>
+
+<div class="card">
+	<div class="results-actions">
+		<button class="btn-secondary" onclick="showEmailModal()">Email Results</button>
+	</div>
+	<table>
+		<thead>
+			<tr>
+				<th>Year</th>
+				<th>Monthly Payment</th>
+				<th>Yearly Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{range .YearlyData}}
+			<tr>
+				<td>{{.Year}}</td>
+				<td class="amount-cell">${{formatCurrency .MonthlyRate}}</td>
+				<td class="amount-cell">${{formatCurrency .YearTotal}}</td>
+			</tr>
+			{{end}}
+		</tbody>
+	</table>
+</div>
+{{end}}

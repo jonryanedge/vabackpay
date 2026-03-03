@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>VA Disability Backpay Calculator</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+	<header>
+		<div class="header-content">
+			<div>
+				<h1>VA Disability Backpay Calculator</h1>
+				<p>Calculate your VA disability backpay from a specific effective date</p>
+			</div>
+			<a href="#" class="privacy-link" onclick="showPrivacyModal(); return false;">Privacy Policy</a>
+		</div>
+	</header>
+
+	<main>
+		<div class="card">
+			<form hx-post="/calculate" hx-target="#results" hx-indicator=".loading">
+				<div class="form-section">
+					<div class="form-section-title">Start Date (Effective Date)</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="start_month">Month</label>
+							<select name="start_month" id="start_month" required>
+								<option value="1">January</option>
+								<option value="2">February</option>
+								<option value="3">March</option>
+								<option value="4">April</option>
+								<option value="5">May</option>
+								<option value="6">June</option>
+								<option value="7">July</option>
+								<option value="8">August</option>
+								<option value="9">September</option>
+								<option value="10">October</option>
+								<option value="11">November</option>
+								<option value="12">December</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="start_year">Year</label>
+							<select name="start_year" id="start_year" required>
+								<option value="2000">2000</option>
+								<option value="2001">2001</option>
+								<option value="2002">2002</option>
+								<option value="2003">2003</option>
+								<option value="2004">2004</option>
+								<option value="2005">2005</option>
+								<option value="2006">2006</option>
+								<option value="2007">2007</option>
+								<option value="2008">2008</option>
+								<option value="2009">2009</option>
+								<option value="2010">2010</option>
+								<option value="2011">2011</option>
+								<option value="2012">2012</option>
+								<option value="2013">2013</option>
+								<option value="2014">2014</option>
+								<option value="2015">2015</option>
+								<option value="2016">2016</option>
+								<option value="2017">2017</option>
+								<option value="2018">2018</option>
+								<option value="2019">2019</option>
+								<option value="2020">2020</option>
+								<option value="2021">2021</option>
+								<option value="2022">2022</option>
+								<option value="2023">2023</option>
+								<option value="2024">2024</option>
+								<option value="2025">2025</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-section">
+					<div class="form-section-title">End Date</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="end_month">Month</label>
+							<select name="end_month" id="end_month" required>
+								<option value="1">January</option>
+								<option value="2">February</option>
+								<option value="3" selected>March</option>
+								<option value="4">April</option>
+								<option value="5">May</option>
+								<option value="6">June</option>
+								<option value="7">July</option>
+								<option value="8">August</option>
+								<option value="9">September</option>
+								<option value="10">October</option>
+								<option value="11">November</option>
+								<option value="12">December</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="end_year">Year</label>
+							<select name="end_year" id="end_year" required>
+								<option value="2000">2000</option>
+								<option value="2001">2001</option>
+								<option value="2002">2002</option>
+								<option value="2003">2003</option>
+								<option value="2004">2004</option>
+								<option value="2005">2005</option>
+								<option value="2006">2006</option>
+								<option value="2007">2007</option>
+								<option value="2008">2008</option>
+								<option value="2009">2009</option>
+								<option value="2010">2010</option>
+								<option value="2011">2011</option>
+								<option value="2012">2012</option>
+								<option value="2013">2013</option>
+								<option value="2014">2014</option>
+								<option value="2015">2015</option>
+								<option value="2016">2016</option>
+								<option value="2017">2017</option>
+								<option value="2018">2018</option>
+								<option value="2019">2019</option>
+								<option value="2020">2020</option>
+								<option value="2021">2021</option>
+								<option value="2022">2022</option>
+								<option value="2023">2023</option>
+								<option value="2024">2024</option>
+								<option value="2025">2025</option>
+								<option value="2026" selected>2026</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="rating">Disability Rating</label>
+					<select name="rating" id="rating" required>
+						<option value="10">10%</option>
+						<option value="20">20%</option>
+						<option value="30">30%</option>
+						<option value="40">40%</option>
+						<option value="50">50%</option>
+						<option value="60">60%</option>
+						<option value="70">70%</option>
+						<option value="80">80%</option>
+						<option value="90">90%</option>
+						<option value="100">100%</option>
+					</select>
+				</div>
+
+				<div class="form-group checkbox-group">
+					<input type="checkbox" name="has_dependents" id="has_dependents">
+					<label for="has_dependents">I have dependents (spouse, children)</label>
+				</div>
+
+				<div id="dependents-container">
+					<div class="form-group">
+						<label for="dependents">Number of dependents</label>
+						<input type="number" name="dependents" id="dependents" min="0" max="10" value="0">
+						<p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+							Note: Dependent add-ons apply to ratings of 30% or higher
+						</p>
+					</div>
+				</div>
+
+				<button type="submit">Calculate Backpay</button>
+			</form>
+		</div>
+
+		<div id="results">
+			<div class="loading" style="display: none;">
+				<p>Calculating...</p>
+			</div>
+		</div>
+	</main>
+
+	<script>
+		document.getElementById('has_dependents').addEventListener('change', function() {
+			const container = document.getElementById('dependents-container');
+			if (this.checked) {
+				container.classList.add('visible');
+			} else {
+				container.classList.remove('visible');
+				document.getElementById('dependents').value = '0';
+			}
+		});
+
+		const ratingSelect = document.getElementById('rating');
+		const dependentsCheckbox = document.getElementById('has_dependents');
+		const dependentsContainer = document.getElementById('dependents-container');
+
+		ratingSelect.addEventListener('change', function() {
+			const rating = parseInt(this.value);
+			if (rating < 30) {
+				dependentsCheckbox.checked = false;
+				dependentsContainer.classList.remove('visible');
+				document.getElementById('dependents').value = '0';
+			}
+		});
+
+		function showPrivacyModal() {
+			document.getElementById('privacy-modal').classList.add('active');
+		}
+
+		function hidePrivacyModal() {
+			document.getElementById('privacy-modal').classList.remove('active');
+		}
+
+		function showEmailModal() {
+			document.getElementById('email-modal').classList.add('active');
+		}
+
+		function hideEmailModal() {
+			document.getElementById('email-modal').classList.remove('active');
+		}
+
+		function submitEmail() {
+			const email = document.getElementById('email-input').value;
+			if (email && email.includes('@')) {
+				const form = document.querySelector('form');
+				const formData = new FormData(form);
+				
+				fetch('/email', {
+					method: 'POST',
+					headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+					body: 'email=' + encodeURIComponent(email) + 
+						'&start_month=' + formData.get('start_month') +
+						'&start_year=' + formData.get('start_year') +
+						'&end_month=' + formData.get('end_month') +
+						'&end_year=' + formData.get('end_year') +
+						'&rating=' + formData.get('rating') +
+						'&dependents=' + (formData.get('dependents') || '0')
+				}).then(() => {
+					document.getElementById('email-form').style.display = 'none';
+					document.getElementById('email-success').style.display = 'block';
+				});
+			}
+		}
+	</script>
+
+	<div id="privacy-modal" class="modal-overlay" onclick="if(event.target === this) hidePrivacyModal()">
+		<div class="modal">
+			<h2>Privacy Policy</h2>
+			<p><strong>VA Disability Backpay Calculator</strong></p>
+			<p>We are committed to protecting your privacy. This calculator is provided as a free service to help veterans understand their VA disability compensation.</p>
+			<p><strong>Information We Collect:</strong></p>
+			<p>If you choose to email your results, we collect only your email address. We do not collect any personal information through the use of this calculator.</p>
+			<p><strong>How We Use Your Information:</strong></p>
+			<p>Your email address is saved securely and will only be used to send you the calculator results and any related notices or updates about this service. We do not sell, trade, or otherwise transfer your personal information to outside parties.</p>
+			<p><strong>Data Security:</strong></p>
+			<p>We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet is 100% secure.</p>
+			<p><strong>Contact Us:</strong></p>
+			<p>If you have any questions about this privacy policy, please contact us through this website.</p>
+			<p><em>Last updated: March 2026</em></p>
+			<button class="btn-secondary" onclick="hidePrivacyModal()">Close</button>
+		</div>
+	</div>
+
+	<div id="email-modal" class="modal-overlay" onclick="if(event.target === this) hideEmailModal()">
+		<div class="modal">
+			<h2>Email Your Results</h2>
+			<p>Enter your email address to receive a copy of your backpay calculation.</p>
+			<div id="email-form">
+				<div class="form-group">
+					<label for="email-input">Email Address</label>
+					<input type="email" id="email-input" placeholder="your@email.com" style="width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+				</div>
+				<button type="button" onclick="submitEmail()" style="width: 100%; padding: 0.875rem; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer;">Send</button>
+			</div>
+			<div id="email-success" class="email-success" style="display: none;">
+				<p>Thank you! Your results will be sent to your email address.</p>
+				<button class="btn-secondary" onclick="hideEmailModal()">Close</button>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
