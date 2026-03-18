@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Days Since - VA Calculator</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<script src="/static/saved.js"></script>
+</head>
+<body>
+	<header>
+		<div class="header-content">
+			<div class="header-left">
+				<a href="/backpay" class="logo-link">
+					<svg class="logo-avatar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="4" y="2" width="16" height="20" rx="2"/>
+						<line x1="8" y1="6" x2="16" y2="6"/>
+						<line x1="8" y1="10" x2="10" y2="10"/>
+						<line x1="12" y1="10" x2="14" y2="10"/>
+						<line x1="8" y1="14" x2="10" y2="14"/>
+						<line x1="12" y1="14" x2="14" y2="14"/>
+						<line x1="8" y1="18" x2="16" y2="18"/>
+					</svg>
+				</a>
+				<div class="header-title">
+					<h1>Days Since Calculator</h1>
+					<p>Calculate how many days have passed since a specific date</p>
+				</div>
+			</div>
+			<div class="header-links">
+				<a href="/backpay" class="privacy-link">Calculator</a>
+				<a href="/days-since" class="privacy-link">Days Since</a>
+				<a href="/saved" class="privacy-link">Saved</a>
+			</div>
+		</div>
+	</header>
+
+	<main>
+		<div class="card">
+			<form id="days-form">
+				<div class="form-section">
+					<div class="form-section-title">Select Date</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="month">Month</label>
+							<select name="month" id="month" required>
+								<option value="1">January</option>
+								<option value="2">February</option>
+								<option value="3">March</option>
+								<option value="4">April</option>
+								<option value="5">May</option>
+								<option value="6">June</option>
+								<option value="7">July</option>
+								<option value="8">August</option>
+								<option value="9">September</option>
+								<option value="10">October</option>
+								<option value="11">November</option>
+								<option value="12">December</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="day">Day</label>
+							<select name="day" id="day" required>
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+								<option value="4">4</option>
+								<option value="5">5</option>
+								<option value="6">6</option>
+								<option value="7">7</option>
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+								<option value="11">11</option>
+								<option value="12">12</option>
+								<option value="13">13</option>
+								<option value="14">14</option>
+								<option value="15">15</option>
+								<option value="16">16</option>
+								<option value="17">17</option>
+								<option value="18">18</option>
+								<option value="19">19</option>
+								<option value="20">20</option>
+								<option value="21">21</option>
+								<option value="22">22</option>
+								<option value="23">23</option>
+								<option value="24">24</option>
+								<option value="25">25</option>
+								<option value="26">26</option>
+								<option value="27">27</option>
+								<option value="28">28</option>
+								<option value="29">29</option>
+								<option value="30">30</option>
+								<option value="31">31</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="year">Year</label>
+							<select name="year" id="year" required>
+								<option value="2000">2000</option>
+								<option value="2001">2001</option>
+								<option value="2002">2002</option>
+								<option value="2003">2003</option>
+								<option value="2004">2004</option>
+								<option value="2005">2005</option>
+								<option value="2006">2006</option>
+								<option value="2007">2007</option>
+								<option value="2008">2008</option>
+								<option value="2009">2009</option>
+								<option value="2010">2010</option>
+								<option value="2011">2011</option>
+								<option value="2012">2012</option>
+								<option value="2013">2013</option>
+								<option value="2014">2014</option>
+								<option value="2015">2015</option>
+								<option value="2016">2016</option>
+								<option value="2017">2017</option>
+								<option value="2018">2018</option>
+								<option value="2019">2019</option>
+								<option value="2020">2020</option>
+								<option value="2021">2021</option>
+								<option value="2022">2022</option>
+								<option value="2023">2023</option>
+								<option value="2024">2024</option>
+								<option value="2025">2025</option>
+								<option value="2026">2026</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<button type="submit">Calculate Days</button>
+			</form>
+		</div>
+
+		<div id="result-container" style="display: none;">
+			<div class="total-backpay">
+				<h2>Days Since</h2>
+				<div class="amount" id="days-result">0</div>
+			</div>
+			<button id="save-btn" class="btn-secondary" style="margin-top: 1rem;">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;">
+					<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+					<polyline points="17 21 17 13 7 13 7 21"/>
+					<polyline points="7 3 7 8 15 8"/>
+				</svg>
+				Save Date
+			</button>
+		</div>
+	</main>
+
+	<div id="save-modal" class="modal-overlay">
+		<div class="modal">
+			<h2>Save Date</h2>
+			<p>Enter a name for this saved date:</p>
+			<div class="form-group">
+				<label for="save-name-input">Name</label>
+				<input type="text" id="save-name-input" placeholder="My Date" style="width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 1rem;">
+			</div>
+			<div style="display: flex; gap: 1rem;">
+				<button id="save-modal-cancel" class="btn-secondary" style="flex: 1;">Cancel</button>
+				<button id="save-modal-confirm" style="flex: 1;">Save</button>
+			</div>
+		</div>
+	</div>
+
+	<footer>
+		<a href="/backpay" class="privacy-link">VA Backpay</a>
+		<span class="privacy-link">|</span>
+		<a href="/days-since" class="privacy-link">Days Since</a>
+		<span class="privacy-link">|</span>
+		<a href="/saved" class="privacy-link">Saved</a>
+		<span class="privacy-link">|</span>
+		<a href="#" class="privacy-link" onclick="showPrivacyModal(); return false;">Privacy Policy</a>
+	</footer>
+
+	<script>
+		let savedMonth = null;
+		let savedDay = null;
+		let savedYear = null;
+
+		document.getElementById('days-form').addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			savedMonth = parseInt(document.getElementById('month').value);
+			savedDay = parseInt(document.getElementById('day').value);
+			savedYear = parseInt(document.getElementById('year').value);
+			
+			const selectedDate = new Date(savedYear, savedMonth - 1, savedDay);
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			selectedDate.setHours(0, 0, 0, 0);
+			
+			const diffTime = today - selectedDate;
+			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+			
+			if (diffDays < 0) {
+				document.getElementById('days-result').textContent = 'Date is in the future';
+				document.getElementById('days-result').style.fontSize = '1.5rem';
+			} else if (diffDays === 0) {
+				document.getElementById('days-result').textContent = '0 (Today)';
+				document.getElementById('days-result').style.fontSize = '2.5rem';
+			} else {
+				document.getElementById('days-result').textContent = diffDays.toLocaleString() + ' days';
+				document.getElementById('days-result').style.fontSize = '2.5rem';
+			}
+			
+			document.getElementById('result-container').style.display = 'block';
+		});
+
+		function showSaveModal() {
+			document.getElementById('save-name-input').value = '';
+			document.getElementById('save-modal').classList.add('active');
+			document.getElementById('save-name-input').focus();
+		}
+
+		function hideSaveModal() {
+			document.getElementById('save-modal').classList.remove('active');
+		}
+
+		document.getElementById('save-btn').addEventListener('click', showSaveModal);
+		document.getElementById('save-modal-cancel').addEventListener('click', hideSaveModal);
+		document.getElementById('save-modal-confirm').addEventListener('click', function() {
+			const name = document.getElementById('save-name-input').value.trim() || 'Untitled';
+			
+			saveItem({
+				type: 'dayssince',
+				name: name,
+				month: savedMonth,
+				day: savedDay,
+				year: savedYear
+			});
+			
+			hideSaveModal();
+			window.location.href = '/saved';
+		});
+
+		document.getElementById('save-name-input').addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				document.getElementById('save-modal-confirm').click();
+			}
+		});
+
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.has('m') && urlParams.has('d') && urlParams.has('y')) {
+			document.getElementById('month').value = urlParams.get('m');
+			document.getElementById('day').value = urlParams.get('d');
+			document.getElementById('year').value = urlParams.get('y');
+			document.getElementById('days-form').dispatchEvent(new Event('submit'));
+		}
+	</script>
+
+	<div id="privacy-modal" class="modal-overlay" onclick="if(event.target === this) hidePrivacyModal()">
+		<div class="modal">
+			<h2>Privacy Policy</h2>
+			<p><strong>VA Disability Backpay Calculator</strong></p>
+			<p>We are committed to protecting your privacy. This calculator is provided as a free service to help veterans understand their VA disability compensation.</p>
+			<p><strong>Information We Collect:</strong></p>
+			<p>If you choose to email your results, we collect only your email address. If you save calculations locally, your data is stored in browser cookies on your device. We do not collect any personal information through the use of this calculator.</p>
+			<p><strong>How We Use Your Information:</strong></p>
+			<p>Your email address is saved securely and will only be used to send you the calculator results and any related notices or updates about this service. Saved calculations are stored locally in your browser and are not accessible to us.</p>
+			<p><strong>Data Storage:</strong></p>
+			<p>Saved calculations are stored as browser cookies on your device. You can delete saved items at any time by clearing your browser cookies. We do not sell, trade, or otherwise transfer your personal information to outside parties.</p>
+			<p><em>Last updated: March 2026</em></p>
+			<button class="btn-secondary" onclick="hidePrivacyModal()">Close</button>
+		</div>
+	</div>
+</body>
+</html>

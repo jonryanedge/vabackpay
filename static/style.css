@@ -22,6 +22,16 @@ body {
 	color: var(--text-primary);
 	line-height: 1.6;
 	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+main {
+	flex: 1;
+	max-width: 800px;
+	width: 100%;
+	margin: 0 auto;
+	padding: 2rem;
 }
 
 header {
@@ -42,16 +52,41 @@ header {
 	margin: 0 auto;
 }
 
-header h1 {
+.header-left {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.logo-link {
+	display: flex;
+	color: var(--accent);
+}
+
+.logo-avatar {
+	width: 2.5rem;
+	height: 2.5rem;
+}
+
+.logo-link:hover {
+	opacity: 0.8;
+}
+
+.header-title h1 {
 	font-size: 1.25rem;
 	font-weight: 600;
 	color: var(--text-primary);
 }
 
-header p {
+.header-title p {
 	font-size: 0.875rem;
 	color: var(--text-secondary);
 	margin-top: 0.25rem;
+}
+
+.header-links {
+	display: flex;
+	gap: 1rem;
 }
 
 .privacy-link {
@@ -62,12 +97,6 @@ header p {
 
 .privacy-link:hover {
 	text-decoration: underline;
-}
-
-main {
-	max-width: 800px;
-	margin: 0 auto;
-	padding: 2rem;
 }
 
 .card {
@@ -341,4 +370,14 @@ tr:hover td {
 	color: var(--success);
 	margin-top: 1rem;
 	text-align: center;
+}
+
+footer {
+	padding: 1rem 2rem 2rem;
+	text-align: center;
+	margin-top: auto;
+}
+
+footer .privacy-link {
+	color: var(--accent);
 }

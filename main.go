@@ -302,6 +302,15 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func backpayHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/backpay.html")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
 func calculateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
@@ -397,6 +406,24 @@ func emailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func daysSinceHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/days-since.html")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func savedHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/saved.html")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
 func main() {
 	loadConfig()
 
@@ -404,6 +431,9 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/backpay", backpayHandler)
+	http.HandleFunc("/days-since", daysSinceHandler)
+	http.HandleFunc("/saved", savedHandler)
 	http.HandleFunc("/calculate", calculateHandler)
 	http.HandleFunc("/email", emailHandler)
 
