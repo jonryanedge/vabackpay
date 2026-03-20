@@ -191,10 +191,10 @@
 							<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
 						</div>
 						<div class="saved-card-details">
-							<span>${formatDate(item.startMonth, 1, item.startYear)} - ${formatDate(item.endMonth, 1, item.endYear)}</span>
+							<span>${formatDate(item.startMonth, 1, item.startYear)} - ${item.endMonth ? formatDate(item.endMonth, 1, item.endYear) : 'Present'}</span>
 							<span>${item.rating}% rating${item.dependents > 0 ? ' + ' + item.dependents + ' dependent' + (item.dependents > 1 ? 's' : '') : ''}</span>
 						</div>
-						<div class="saved-card-amount">${formatCurrency(item.totalAmount)}</div>
+						<div class="saved-card-amount">${formatCurrency(getCurrentBackpayAmount(item))}</div>
 					</div>
 					<div class="saved-card-actions">
 						<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
@@ -273,7 +273,11 @@
 					const item = getSavedItem(id);
 					if (item) {
 						if (item.type === 'backpay') {
-							window.location.href = `/backpay?id=${item.id}&sm=${item.startMonth}&sy=${item.startYear}&em=${item.endMonth}&ey=${item.endYear}&r=${item.rating}&d=${item.dependents}`;
+							let url = `/backpay?id=${item.id}&sm=${item.startMonth}&sy=${item.startYear}&r=${item.rating}&d=${item.dependents}`;
+							if (item.endMonth !== null) {
+								url += `&em=${item.endMonth}&ey=${item.endYear}`;
+							}
+							window.location.href = url;
 						} else {
 							window.location.href = `/days-since?id=${item.id}&m=${item.month}&d=${item.day}&y=${item.year}`;
 						}

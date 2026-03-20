@@ -88,58 +88,65 @@
 
 				<div class="form-section">
 					<div class="form-section-title">End Date</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="end_month">Month</label>
-							<select name="end_month" id="end_month" required>
-								<option value="1">January</option>
-								<option value="2">February</option>
-								<option value="3" selected>March</option>
-								<option value="4">April</option>
-								<option value="5">May</option>
-								<option value="6">June</option>
-								<option value="7">July</option>
-								<option value="8">August</option>
-								<option value="9">September</option>
-								<option value="10">October</option>
-								<option value="11">November</option>
-								<option value="12">December</option>
-							</select>
-						</div>
+					<div class="form-group checkbox-group">
+						<input type="checkbox" name="has_end_date" id="has_end_date">
+						<label for="has_end_date">Set specific end date</label>
+					</div>
+					<div id="end-date-container" style="display: none;">
+						<div class="form-row">
+							<div class="form-group">
+								<label for="end_month">Month</label>
+								<select name="end_month" id="end_month">
+									<option value="1">January</option>
+									<option value="2">February</option>
+									<option value="3">March</option>
+									<option value="4">April</option>
+									<option value="5">May</option>
+									<option value="6">June</option>
+									<option value="7">July</option>
+									<option value="8">August</option>
+									<option value="9">September</option>
+									<option value="10">October</option>
+									<option value="11">November</option>
+									<option value="12">December</option>
+								</select>
+							</div>
 
-						<div class="form-group">
-							<label for="end_year">Year</label>
-							<select name="end_year" id="end_year" required>
-								<option value="2000">2000</option>
-								<option value="2001">2001</option>
-								<option value="2002">2002</option>
-								<option value="2003">2003</option>
-								<option value="2004">2004</option>
-								<option value="2005">2005</option>
-								<option value="2006">2006</option>
-								<option value="2007">2007</option>
-								<option value="2008">2008</option>
-								<option value="2009">2009</option>
-								<option value="2010">2010</option>
-								<option value="2011">2011</option>
-								<option value="2012">2012</option>
-								<option value="2013">2013</option>
-								<option value="2014">2014</option>
-								<option value="2015">2015</option>
-								<option value="2016">2016</option>
-								<option value="2017">2017</option>
-								<option value="2018">2018</option>
-								<option value="2019">2019</option>
-								<option value="2020">2020</option>
-								<option value="2021">2021</option>
-								<option value="2022">2022</option>
-								<option value="2023">2023</option>
-								<option value="2024">2024</option>
-								<option value="2025">2025</option>
-								<option value="2026" selected>2026</option>
-							</select>
+							<div class="form-group">
+								<label for="end_year">Year</label>
+								<select name="end_year" id="end_year">
+									<option value="2000">2000</option>
+									<option value="2001">2001</option>
+									<option value="2002">2002</option>
+									<option value="2003">2003</option>
+									<option value="2004">2004</option>
+									<option value="2005">2005</option>
+									<option value="2006">2006</option>
+									<option value="2007">2007</option>
+									<option value="2008">2008</option>
+									<option value="2009">2009</option>
+									<option value="2010">2010</option>
+									<option value="2011">2011</option>
+									<option value="2012">2012</option>
+									<option value="2013">2013</option>
+									<option value="2014">2014</option>
+									<option value="2015">2015</option>
+									<option value="2016">2016</option>
+									<option value="2017">2017</option>
+									<option value="2018">2018</option>
+									<option value="2019">2019</option>
+									<option value="2020">2020</option>
+									<option value="2021">2021</option>
+									<option value="2022">2022</option>
+									<option value="2023">2023</option>
+									<option value="2024">2024</option>
+									<option value="2025">2025</option>
+									<option value="2026">2026</option>
+								</select>
+							</div>
 						</div>
 					</div>
+					<p id="present-label" style="color: var(--text-secondary); font-size: 0.875rem;">Currently set to: Present</p>
 				</div>
 
 				<div class="form-group">
@@ -233,6 +240,20 @@
 			}
 		});
 
+		document.getElementById('has_end_date').addEventListener('change', function() {
+			const container = document.getElementById('end-date-container');
+			const presentLabel = document.getElementById('present-label');
+			if (this.checked) {
+				container.style.display = 'block';
+				presentLabel.style.display = 'none';
+			} else {
+				container.style.display = 'none';
+				presentLabel.style.display = 'block';
+				document.getElementById('end_month').value = '3';
+				document.getElementById('end_year').value = '2026';
+			}
+		});
+
 		function showPrivacyModal() {
 			document.getElementById('privacy-modal').classList.add('active');
 		}
@@ -255,14 +276,21 @@
 				const form = document.getElementById('backpay-form');
 				const formData = new FormData(form);
 				
+				const hasEndDate = document.getElementById('has_end_date').checked;
+				const today = new Date();
+				const currentMonth = today.getMonth() + 1;
+				const currentYear = today.getFullYear();
+				const endMonth = hasEndDate ? formData.get('end_month') : currentMonth;
+				const endYear = hasEndDate ? formData.get('end_year') : currentYear;
+				
 				fetch('/email', {
 					method: 'POST',
 					headers: {'Content-Type': 'application/x-www-form-urlencoded'},
 					body: 'email=' + encodeURIComponent(email) + 
 						'&start_month=' + formData.get('start_month') +
 						'&start_year=' + formData.get('start_year') +
-						'&end_month=' + formData.get('end_month') +
-						'&end_year=' + formData.get('end_year') +
+						'&end_month=' + endMonth +
+						'&end_year=' + endYear +
 						'&rating=' + formData.get('rating') +
 						'&dependents=' + (formData.get('dependents') || '0')
 				}).then(() => {
@@ -288,6 +316,8 @@
 			const form = document.getElementById('backpay-form');
 			const formData = new FormData(form);
 			
+			const hasEndDate = document.getElementById('has_end_date').checked;
+			
 			const totalAmountText = document.querySelector('.total-backpay .amount')?.textContent || '';
 			const amountMatch = totalAmountText.replace(/[$,]/g, '');
 			const totalAmount = parseFloat(amountMatch) || 0;
@@ -297,8 +327,8 @@
 				name: name,
 				startMonth: parseInt(formData.get('start_month')),
 				startYear: parseInt(formData.get('start_year')),
-				endMonth: parseInt(formData.get('end_month')),
-				endYear: parseInt(formData.get('end_year')),
+				endMonth: hasEndDate ? parseInt(formData.get('end_month')) : null,
+				endYear: hasEndDate ? parseInt(formData.get('end_year')) : null,
 				rating: parseInt(formData.get('rating')),
 				dependents: parseInt(formData.get('dependents')) || 0,
 				totalAmount: totalAmount
@@ -329,11 +359,9 @@
 		});
 
 		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.has('sm') && urlParams.has('sy') && urlParams.has('em') && urlParams.has('ey') && urlParams.has('r')) {
+		if (urlParams.has('sm') && urlParams.has('sy') && urlParams.has('r')) {
 			document.getElementById('start_month').value = urlParams.get('sm');
 			document.getElementById('start_year').value = urlParams.get('sy');
-			document.getElementById('end_month').value = urlParams.get('em');
-			document.getElementById('end_year').value = urlParams.get('ey');
 			document.getElementById('rating').value = urlParams.get('r');
 			
 			const dependents = parseInt(urlParams.get('d')) || 0;
@@ -343,10 +371,25 @@
 				document.getElementById('dependents').value = dependents;
 			}
 			
+			const endMonthParam = urlParams.get('em');
+			const endYearParam = urlParams.get('ey');
+			
+			if (endMonthParam && endYearParam) {
+				document.getElementById('has_end_date').checked = true;
+				document.getElementById('end-date-container').style.display = 'block';
+				document.getElementById('present-label').style.display = 'none';
+				document.getElementById('end_month').value = endMonthParam;
+				document.getElementById('end_year').value = endYearParam;
+			}
+			
+			const today = new Date();
+			const currentMonth = today.getMonth() + 1;
+			const currentYear = today.getFullYear();
+			
 			const startMonth = urlParams.get('sm');
 			const startYear = urlParams.get('sy');
-			const endMonth = urlParams.get('em');
-			const endYear = urlParams.get('ey');
+			const endMonth = endMonthParam || currentMonth;
+			const endYear = endYearParam || currentYear;
 			const rating = urlParams.get('r');
 			
 			fetch('/calculate', {
