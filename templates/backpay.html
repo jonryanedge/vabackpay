@@ -30,7 +30,7 @@
 
 	<main>
 		<div class="card">
-			<form id="backpay-form" hx-post="/calculate" hx-target="#results" hx-indicator=".loading">
+			<form id="backpay-form">
 				<div class="form-section">
 					<div class="form-section-title">Start Date (Effective Date)</div>
 					<div class="form-row">
@@ -184,11 +184,7 @@
 			</form>
 		</div>
 
-		<div id="results">
-			<div class="loading" style="display: none;">
-				<p>Calculating...</p>
-			</div>
-		</div>
+		<div id="results"></div>
 	</main>
 
 	<div id="save-modal" class="modal-overlay">
@@ -252,6 +248,45 @@
 				document.getElementById('end_month').value = '3';
 				document.getElementById('end_year').value = '2026';
 			}
+		});
+
+		document.getElementById('backpay-form').addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			const form = document.getElementById('backpay-form');
+			const formData = new FormData(form);
+			
+			const hasEndDate = document.getElementById('has_end_date').checked;
+			const today = new Date();
+			const currentMonth = today.getMonth() + 1;
+			const currentYear = today.getFullYear();
+			
+			const startMonth = formData.get('start_month');
+			const startYear = formData.get('start_year');
+			const endMonth = hasEndDate ? formData.get('end_month') : currentMonth;
+			const endYear = hasEndDate ? formData.get('end_year') : currentYear;
+			const rating = formData.get('rating');
+			const dependents = formData.get('dependents') || '0';
+			
+			document.getElementById('results').innerHTML = '<div class="loading" style="text-align: center; padding: 2rem;"><p>Calculating...</p></div>';
+			
+			fetch('/calculate', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+				body: 'start_month=' + startMonth +
+					'&start_year=' + startYear +
+					'&end_month=' + endMonth +
+					'&end_year=' + endYear +
+					'&rating=' + rating +
+					'&dependents=' + dependents
+			}).then(response => response.text())
+			.then(html => {
+				document.getElementById('results').innerHTML = html;
+				const saveBtn = document.getElementById('save-btn');
+				if (saveBtn) {
+					saveBtn.addEventListener('click', showSaveModal);
+				}
+			});
 		});
 
 		function showPrivacyModal() {
