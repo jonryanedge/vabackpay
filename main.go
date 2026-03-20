@@ -463,6 +463,10 @@ func main() {
 		http.ServeFile(w, r, "static/favicon.ico")
 	})
 
+	http.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/robots.txt")
+	})
+
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/backpay", backpayHandler)
 	http.HandleFunc("/days-since", daysSinceHandler)
