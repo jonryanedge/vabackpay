@@ -453,6 +453,16 @@ func savedHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
+func withHeaders(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Cache-Control", "max-age=3600, private")
+		h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	loadConfig()
 
@@ -460,19 +470,19 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/favicon.ico")
+		http.ServeFile(w, r, "static/logo.png")
 	})
 
 	http.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/robots.txt")
 	})
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/backpay", backpayHandler)
-	http.HandleFunc("/days-since", daysSinceHandler)
-	http.HandleFunc("/saved", savedHandler)
-	http.HandleFunc("/calculate", calculateHandler)
-	http.HandleFunc("/email", emailHandler)
+	http.Handle("/", withHeaders(http.HandlerFunc(homeHandler)))
+	http.Handle("/backpay", withHeaders(http.HandlerFunc(backpayHandler)))
+	http.Handle("/days-since", withHeaders(http.HandlerFunc(daysSinceHandler)))
+	http.Handle("/saved", withHeaders(http.HandlerFunc(savedHandler)))
+	http.Handle("/calculate", withHeaders(http.HandlerFunc(calculateHandler)))
+	http.Handle("/email", withHeaders(http.HandlerFunc(emailHandler)))
 
 	fmt.Println("Server starting on http://localhost:8080")
 	if config.Debug {
