@@ -1,33 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Days Since - VA Calculator</title>
-	<link rel="stylesheet" href="/static/style.css">
-	<script src="/static/saved.js"></script>
-</head>
-<body>
-	<header>
-		<div class="header-content">
-			<div class="header-left">
-				<a href="/backpay" class="logo-link">
-					<img class="logo-avatar" src="/static/logo.png" alt="VA Calculator">
-				</a>
-				<div class="header-title">
-					<h1>Days Since Calculator</h1>
-					<p>Calculate how many days have passed since a specific date</p>
-				</div>
-			</div>
-			<div class="header-links">
-				<a href="/backpay" class="privacy-link">Calculator</a>
-				<a href="/days-since" class="privacy-link">Days Since</a>
-				<a href="/saved" class="privacy-link">Saved</a>
-			</div>
-		</div>
-	</header>
+{{define "title"}}Days Since - VA Calculator{{end}}
 
-	<main>
+{{define "header-title"}}Days Since Calculator{{end}}
+
+{{define "header-subtitle"}}Calculate how many days have passed since a specific date{{end}}
+
+{{define "content"}}
 		<div class="card">
 			<form id="days-form">
 				<div class="form-section">
@@ -141,7 +118,10 @@
 				Save Date
 			</button>
 		</div>
-	</main>
+{{end}}
+
+{{define "modals"}}
+	{{template "privacy-modal" .}}
 
 	<div id="save-modal" class="modal-overlay">
 		<div class="modal">
@@ -157,21 +137,21 @@
 			</div>
 		</div>
 	</div>
+{{end}}
 
-	<footer>
-		<a href="/backpay" class="privacy-link">VA Backpay</a>
-		<span class="privacy-link">|</span>
-		<a href="/days-since" class="privacy-link">Days Since</a>
-		<span class="privacy-link">|</span>
-		<a href="/saved" class="privacy-link">Saved</a>
-		<span class="privacy-link">|</span>
-		<a href="#" class="privacy-link" onclick="showPrivacyModal(); return false;">Privacy Policy</a>
-	</footer>
-
+{{define "scripts"}}
 	<script>
 		let savedMonth = null;
 		let savedDay = null;
 		let savedYear = null;
+
+		function showPrivacyModal() {
+			document.getElementById('privacy-modal').classList.add('active');
+		}
+
+		function hidePrivacyModal() {
+			document.getElementById('privacy-modal').classList.remove('active');
+		}
 
 		document.getElementById('days-form').addEventListener('submit', function(e) {
 			e.preventDefault();
@@ -243,21 +223,4 @@
 			document.getElementById('days-form').dispatchEvent(new Event('submit'));
 		}
 	</script>
-
-	<div id="privacy-modal" class="modal-overlay" onclick="if(event.target === this) hidePrivacyModal()">
-		<div class="modal">
-			<h2>Privacy Policy</h2>
-			<p><strong>VA Disability Backpay Calculator</strong></p>
-			<p>We are committed to protecting your privacy. This calculator is provided as a free service to help veterans understand their VA disability compensation.</p>
-			<p><strong>Information We Collect:</strong></p>
-			<p>If you choose to email your results, we collect only your email address. If you save calculations locally, your data is stored in browser cookies on your device. We do not collect any personal information through the use of this calculator.</p>
-			<p><strong>How We Use Your Information:</strong></p>
-			<p>Your email address is saved securely and will only be used to send you the calculator results and any related notices or updates about this service. Saved calculations are stored locally in your browser and are not accessible to us.</p>
-			<p><strong>Data Storage:</strong></p>
-			<p>Saved calculations are stored as browser cookies on your device. You can delete saved items at any time by clearing your browser cookies. We do not sell, trade, or otherwise transfer your personal information to outside parties.</p>
-			<p><em>Last updated: March 2026</em></p>
-			<button class="btn-secondary" onclick="hidePrivacyModal()">Close</button>
-		</div>
-	</div>
-</body>
-</html>
+{{end}}

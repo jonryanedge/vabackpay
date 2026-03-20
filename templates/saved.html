@@ -1,33 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Saved - VA Calculator</title>
-	<link rel="stylesheet" href="/static/style.css">
-	<script src="/static/saved.js"></script>
-</head>
-<body>
-	<header>
-		<div class="header-content">
-			<div class="header-left">
-				<a href="/backpay" class="logo-link">
-					<img class="logo-avatar" src="/static/logo.png" alt="VA Calculator">
-				</a>
-				<div class="header-title">
-					<h1>Saved Calculations</h1>
-					<p>Your saved calculations and dates</p>
-				</div>
-			</div>
-			<div class="header-links">
-				<a href="/backpay" class="privacy-link">Calculator</a>
-				<a href="/days-since" class="privacy-link">Days Since</a>
-				<a href="/saved" class="privacy-link">Saved</a>
-			</div>
-		</div>
-	</header>
+{{define "title"}}Saved - VA Calculator{{end}}
 
-	<main>
+{{define "header-title"}}Saved Calculations{{end}}
+
+{{define "header-subtitle"}}Your saved calculations and dates{{end}}
+
+{{define "content"}}
 		<div id="saved-content">
 			<div id="backpay-section" class="saved-section" style="display: none;">
 				<h2 class="saved-section-title">Saved Calculations</h2>
@@ -43,7 +20,10 @@
 				<p style="text-align: center; color: var(--text-secondary);">No saved items yet. Calculate something and save it to see it here.</p>
 			</div>
 		</div>
-	</main>
+{{end}}
+
+{{define "modals"}}
+	{{template "privacy-modal" .}}
 
 	<div id="name-modal" class="modal-overlay">
 		<div class="modal">
@@ -81,32 +61,108 @@
 			</div>
 		</div>
 	</div>
+{{end}}
 
-	<footer>
-		<a href="/backpay" class="privacy-link">VA Backpay</a>
-		<span class="privacy-link">|</span>
-		<a href="/days-since" class="privacy-link">Days Since</a>
-		<span class="privacy-link">|</span>
-		<a href="/saved" class="privacy-link">Saved</a>
-		<span class="privacy-link">|</span>
-		<a href="#" class="privacy-link" onclick="showPrivacyModal(); return false;">Privacy Policy</a>
-	</footer>
+{{define "scripts"}}
+	<style>
+		.saved-section {
+			margin-bottom: 2rem;
+		}
 
-	<div id="privacy-modal" class="modal-overlay" onclick="if(event.target === this) hidePrivacyModal()">
-		<div class="modal">
-			<h2>Privacy Policy</h2>
-			<p><strong>VA Disability Backpay Calculator</strong></p>
-			<p>We are committed to protecting your privacy. This calculator is provided as a free service to help veterans understand their VA disability compensation.</p>
-			<p><strong>Information We Collect:</strong></p>
-			<p>If you choose to email your results, we collect only your email address. If you save calculations locally, your data is stored in browser cookies on your device. We do not collect any personal information through the use of this calculator.</p>
-			<p><strong>How We Use Your Information:</strong></p>
-			<p>Your email address is saved securely and will only be used to send you the calculator results and any related notices or updates about this service. Saved calculations are stored locally in your browser and are not accessible to us.</p>
-			<p><strong>Data Storage:</strong></p>
-			<p>Saved calculations are stored as browser cookies on your device. You can delete saved items at any time by clearing your browser cookies. We do not sell, trade, or otherwise transfer your personal information to outside parties.</p>
-			<p><em>Last updated: March 2026</em></p>
-			<button class="btn-secondary" onclick="hidePrivacyModal()">Close</button>
-		</div>
-	</div>
+		.saved-section-title {
+			font-size: 1rem;
+			font-weight: 600;
+			color: var(--text-secondary);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			margin-bottom: 1rem;
+		}
+
+		.saved-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.saved-card {
+			display: flex;
+			align-items: center;
+			background-color: var(--bg-secondary);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1rem 1.25rem;
+			cursor: pointer;
+			transition: border-color 0.2s;
+		}
+
+		.saved-card:hover {
+			border-color: var(--accent);
+		}
+
+		.saved-card-content {
+			flex: 1;
+		}
+
+		.saved-card-name-wrapper {
+			font-weight: 600;
+			color: var(--text-primary);
+			margin-bottom: 0.25rem;
+		}
+
+		.saved-card-name-input {
+			background: var(--bg-tertiary);
+			border: 1px solid var(--accent);
+			border-radius: 4px;
+			padding: 0.25rem 0.5rem;
+			font-size: inherit;
+			font-weight: inherit;
+			color: var(--text-primary);
+		}
+
+		.saved-card-details {
+			font-size: 0.875rem;
+			color: var(--text-secondary);
+			display: flex;
+			gap: 1rem;
+		}
+
+		.saved-card-amount {
+			font-size: 1.25rem;
+			font-weight: 700;
+			color: var(--success);
+			margin-top: 0.5rem;
+		}
+
+		.saved-card-actions {
+			display: flex;
+			gap: 0.5rem;
+			margin-left: 1rem;
+		}
+
+		.saved-action-btn {
+			width: 2rem;
+			height: 2rem;
+			padding: 0;
+			background: transparent;
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			color: var(--text-secondary);
+		}
+
+		.saved-action-btn:hover {
+			background: var(--bg-tertiary);
+			color: var(--text-primary);
+		}
+
+		.saved-action-btn svg {
+			width: 1rem;
+			height: 1rem;
+		}
+	</style>
 
 	<script>
 		function showPrivacyModal() {
@@ -325,109 +381,4 @@
 
 		renderSavedItems();
 	</script>
-
-	<style>
-		.saved-section {
-			margin-bottom: 2rem;
-		}
-
-		.saved-section-title {
-			font-size: 1rem;
-			font-weight: 600;
-			color: var(--text-secondary);
-			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			margin-bottom: 1rem;
-		}
-
-		.saved-list {
-			display: flex;
-			flex-direction: column;
-			gap: 0.75rem;
-		}
-
-		.saved-card {
-			display: flex;
-			align-items: center;
-			background-color: var(--bg-secondary);
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 1rem 1.25rem;
-			cursor: pointer;
-			transition: border-color 0.2s;
-		}
-
-		.saved-card:hover {
-			border-color: var(--accent);
-		}
-
-		.saved-card-content {
-			flex: 1;
-		}
-
-		.saved-card-name-wrapper {
-			font-weight: 600;
-			color: var(--text-primary);
-			margin-bottom: 0.25rem;
-		}
-
-		.saved-card-name-input {
-			background: var(--bg-tertiary);
-			border: 1px solid var(--accent);
-			border-radius: 4px;
-			padding: 0.25rem 0.5rem;
-			font-size: inherit;
-			font-weight: inherit;
-			color: var(--text-primary);
-		}
-
-		.saved-card-details {
-			font-size: 0.875rem;
-			color: var(--text-secondary);
-			display: flex;
-			gap: 1rem;
-		}
-
-		.saved-card-amount {
-			font-size: 1.25rem;
-			font-weight: 700;
-			color: var(--success);
-			margin-top: 0.5rem;
-		}
-
-		.saved-card-actions {
-			display: flex;
-			gap: 0.5rem;
-			margin-left: 1rem;
-		}
-
-		.saved-action-btn {
-			width: 2rem;
-			height: 2rem;
-			padding: 0;
-			background: transparent;
-			border: 1px solid var(--border);
-			border-radius: 4px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			color: var(--text-secondary);
-		}
-
-		.saved-action-btn:hover {
-			background: var(--bg-tertiary);
-			color: var(--text-primary);
-		}
-
-		.saved-action-btn svg {
-			width: 1rem;
-			height: 1rem;
-		}
-
-		#clear-all-btn {
-			margin-top: 1rem;
-		}
-	</style>
-</body>
-</html>
+{{end}}

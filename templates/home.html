@@ -1,0 +1,26 @@
+{{define "title"}}VA Disability Calculator{{end}}
+
+{{define "header-title"}}VA Disability Backpay Calculator{{end}}
+
+{{define "header-subtitle"}}Calculate your VA disability backpay from a specific effective date{{end}}
+
+{{define "scripts"}}
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const items = loadSavedItems();
+			if (items.length > 0) {
+				window.location.href = '/saved';
+			} else {
+				window.location.href = '/backpay';
+			}
+		});
+	</script>
+{{end}}
+
+{{define "content"}}
+		<p style="text-align: center; color: var(--text-secondary);">Loading...</p>
+{{end}}
+
+{{define "modals"}}{{end}}
+
+{{define "scripts"}}{{end}}

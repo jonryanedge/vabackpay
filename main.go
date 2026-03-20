@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -13,6 +14,14 @@ import (
 	"github.com/joho/godotenv"
 	"gopkg.in/gomail.v2"
 )
+
+//go:embed templates/*
+var templateFS embed.FS
+
+func readTemplate(name string) string {
+	data, _ := templateFS.ReadFile(name)
+	return string(data)
+}
 
 func formatCurrency(amount float64) string {
 	s := fmt.Sprintf("%.2f", amount)
@@ -294,21 +303,31 @@ func generateEmailBody(result CalcResult) string {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/index.html")
+	tmpl, err := template.New("base").Parse(readTemplate("templates/layout.html"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	tmpl.Execute(w, nil)
+	tmpl, err = tmpl.Parse(readTemplate("templates/home.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
 func backpayHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/backpay.html")
+	tmpl, err := template.New("base").Parse(readTemplate("templates/layout.html"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	tmpl.Execute(w, nil)
+	tmpl, err = tmpl.Parse(readTemplate("templates/backpay.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
 func calculateHandler(w http.ResponseWriter, r *http.Request) {
@@ -329,7 +348,7 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.New("results.html").Funcs(template.FuncMap{
 		"formatCurrency": formatCurrency,
-	}).ParseFiles("templates/results.html")
+	}).Parse(readTemplate("templates/results.html"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -407,21 +426,31 @@ func emailHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func daysSinceHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/days-since.html")
+	tmpl, err := template.New("base").Parse(readTemplate("templates/layout.html"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	tmpl.Execute(w, nil)
+	tmpl, err = tmpl.Parse(readTemplate("templates/days-since.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
 func savedHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/saved.html")
+	tmpl, err := template.New("base").Parse(readTemplate("templates/layout.html"))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	tmpl.Execute(w, nil)
+	tmpl, err = tmpl.Parse(readTemplate("templates/saved.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
 func main() {

@@ -1,34 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>VA Disability Backpay Calculator</title>
-	<link rel="stylesheet" href="/static/style.css">
-	<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-	<script src="/static/saved.js"></script>
-</head>
-<body>
-	<header>
-		<div class="header-content">
-			<div class="header-left">
-				<a href="/backpay" class="logo-link">
-					<img class="logo-avatar" src="/static/logo.png" alt="VA Calculator">
-				</a>
-				<div class="header-title">
-					<h1>VA Disability Backpay Calculator</h1>
-					<p>Calculate your VA disability backpay from a specific effective date</p>
-				</div>
-			</div>
-			<div class="header-links">
-				<a href="/" class="privacy-link">Calculator</a>
-				<a href="/days-since" class="privacy-link">Days Since</a>
-				<a href="/saved" class="privacy-link">Saved</a>
-			</div>
-		</div>
-	</header>
+{{define "title"}}VA Disability Backpay Calculator{{end}}
 
-	<main>
+{{define "header-title"}}VA Disability Backpay Calculator{{end}}
+
+{{define "header-subtitle"}}Calculate your VA disability backpay from a specific effective date{{end}}
+
+{{define "content"}}
 		<div class="card">
 			<form id="backpay-form">
 				<div class="form-section">
@@ -185,7 +161,10 @@
 		</div>
 
 		<div id="results"></div>
-	</main>
+{{end}}
+
+{{define "modals"}}
+	{{template "privacy-modal" .}}
 
 	<div id="save-modal" class="modal-overlay">
 		<div class="modal">
@@ -202,16 +181,26 @@
 		</div>
 	</div>
 
-	<footer>
-		<a href="/" class="privacy-link">VA Backpay</a>
-		<span class="privacy-link">|</span>
-		<a href="/days-since" class="privacy-link">Days Since</a>
-		<span class="privacy-link">|</span>
-		<a href="/saved" class="privacy-link">Saved</a>
-		<span class="privacy-link">|</span>
-		<a href="#" class="privacy-link" onclick="showPrivacyModal(); return false;">Privacy Policy</a>
-	</footer>
+	<div id="email-modal" class="modal-overlay" onclick="if(event.target === this) hideEmailModal()">
+		<div class="modal">
+			<h2>Email Your Results</h2>
+			<p>Enter your email address to receive a copy of your backpay calculation.</p>
+			<div id="email-form">
+				<div class="form-group">
+					<label for="email-input">Email Address</label>
+					<input type="email" id="email-input" placeholder="your@email.com" style="width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+				</div>
+				<button type="button" onclick="submitEmail()" style="width: 100%; padding: 0.875rem; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer;">Send</button>
+			</div>
+			<div id="email-success" class="email-success" style="display: none;">
+				<p>Thank you! Your results will be sent to your email address.</p>
+				<button class="btn-secondary" onclick="hideEmailModal()">Close</button>
+			</div>
+		</div>
+	</div>
+{{end}}
 
+{{define "scripts"}}
 	<script>
 		document.getElementById('has_dependents').addEventListener('change', function() {
 			const container = document.getElementById('dependents-container');
@@ -248,45 +237,6 @@
 				document.getElementById('end_month').value = '3';
 				document.getElementById('end_year').value = '2026';
 			}
-		});
-
-		document.getElementById('backpay-form').addEventListener('submit', function(e) {
-			e.preventDefault();
-			
-			const form = document.getElementById('backpay-form');
-			const formData = new FormData(form);
-			
-			const hasEndDate = document.getElementById('has_end_date').checked;
-			const today = new Date();
-			const currentMonth = today.getMonth() + 1;
-			const currentYear = today.getFullYear();
-			
-			const startMonth = formData.get('start_month');
-			const startYear = formData.get('start_year');
-			const endMonth = hasEndDate ? formData.get('end_month') : currentMonth;
-			const endYear = hasEndDate ? formData.get('end_year') : currentYear;
-			const rating = formData.get('rating');
-			const dependents = formData.get('dependents') || '0';
-			
-			document.getElementById('results').innerHTML = '<div class="loading" style="text-align: center; padding: 2rem;"><p>Calculating...</p></div>';
-			
-			fetch('/calculate', {
-				method: 'POST',
-				headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-				body: 'start_month=' + startMonth +
-					'&start_year=' + startYear +
-					'&end_month=' + endMonth +
-					'&end_year=' + endYear +
-					'&rating=' + rating +
-					'&dependents=' + dependents
-			}).then(response => response.text())
-			.then(html => {
-				document.getElementById('results').innerHTML = html;
-				const saveBtn = document.getElementById('save-btn');
-				if (saveBtn) {
-					saveBtn.addEventListener('click', showSaveModal);
-				}
-			});
 		});
 
 		function showPrivacyModal() {
@@ -393,6 +343,45 @@
 			}
 		});
 
+		document.getElementById('backpay-form').addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			const form = document.getElementById('backpay-form');
+			const formData = new FormData(form);
+			
+			const hasEndDate = document.getElementById('has_end_date').checked;
+			const today = new Date();
+			const currentMonth = today.getMonth() + 1;
+			const currentYear = today.getFullYear();
+			
+			const startMonth = formData.get('start_month');
+			const startYear = formData.get('start_year');
+			const endMonth = hasEndDate ? formData.get('end_month') : currentMonth;
+			const endYear = hasEndDate ? formData.get('end_year') : currentYear;
+			const rating = formData.get('rating');
+			const dependents = formData.get('dependents') || '0';
+			
+			document.getElementById('results').innerHTML = '<div class="loading" style="text-align: center; padding: 2rem;"><p>Calculating...</p></div>';
+			
+			fetch('/calculate', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+				body: 'start_month=' + startMonth +
+					'&start_year=' + startYear +
+					'&end_month=' + endMonth +
+					'&end_year=' + endYear +
+					'&rating=' + rating +
+					'&dependents=' + dependents
+			}).then(response => response.text())
+			.then(html => {
+				document.getElementById('results').innerHTML = html;
+				const saveBtn = document.getElementById('save-btn');
+				if (saveBtn) {
+					saveBtn.addEventListener('click', showSaveModal);
+				}
+			});
+		});
+
 		const urlParams = new URLSearchParams(window.location.search);
 		if (urlParams.has('sm') && urlParams.has('sy') && urlParams.has('r')) {
 			document.getElementById('start_month').value = urlParams.get('sm');
@@ -446,39 +435,4 @@
 			});
 		}
 	</script>
-
-	<div id="privacy-modal" class="modal-overlay" onclick="if(event.target === this) hidePrivacyModal()">
-		<div class="modal">
-			<h2>Privacy Policy</h2>
-			<p><strong>VA Disability Backpay Calculator</strong></p>
-			<p>We are committed to protecting your privacy. This calculator is provided as a free service to help veterans understand their VA disability compensation.</p>
-			<p><strong>Information We Collect:</strong></p>
-			<p>If you choose to email your results, we collect only your email address. If you save calculations locally, your data is stored in browser cookies on your device. We do not collect any personal information through the use of this calculator.</p>
-			<p><strong>How We Use Your Information:</strong></p>
-			<p>Your email address is saved securely and will only be used to send you the calculator results and any related notices or updates about this service. Saved calculations are stored locally in your browser and are not accessible to us.</p>
-			<p><strong>Data Storage:</strong></p>
-			<p>Saved calculations are stored as browser cookies on your device. You can delete saved items at any time by clearing your browser cookies. We do not sell, trade, or otherwise transfer your personal information to outside parties.</p>
-			<p><em>Last updated: March 2026</em></p>
-			<button class="btn-secondary" onclick="hidePrivacyModal()">Close</button>
-		</div>
-	</div>
-
-	<div id="email-modal" class="modal-overlay" onclick="if(event.target === this) hideEmailModal()">
-		<div class="modal">
-			<h2>Email Your Results</h2>
-			<p>Enter your email address to receive a copy of your backpay calculation.</p>
-			<div id="email-form">
-				<div class="form-group">
-					<label for="email-input">Email Address</label>
-					<input type="email" id="email-input" placeholder="your@email.com" style="width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
-				</div>
-				<button type="button" onclick="submitEmail()" style="width: 100%; padding: 0.875rem; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer;">Send</button>
-			</div>
-			<div id="email-success" class="email-success" style="display: none;">
-				<p>Thank you! Your results will be sent to your email address.</p>
-				<button class="btn-secondary" onclick="hideEmailModal()">Close</button>
-			</div>
-		</div>
-	</div>
-</body>
-</html>
+{{end}}
