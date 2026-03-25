@@ -282,6 +282,10 @@ tr:hover td {
 		padding: 1rem;
 	}
 
+  .header-title {
+    display: none;
+  }
+
 	.form-row {
 		flex-direction: column;
 		gap: 0;
