@@ -72,12 +72,28 @@ function getSavedItem(id) {
     return items.find(item => item.id === id) || null;
 }
 
-function getSavedBackpayItems() {
-    return loadSavedItems().filter(item => item.type === 'backpay');
+function getSavedBackpayItems(status) {
+    return loadSavedItems().filter(item => item.type === 'backpay' && (status ? item.status === status : item.status !== 'archived'));
 }
 
-function getSavedDaysSinceItems() {
-    return loadSavedItems().filter(item => item.type === 'dayssince');
+function getSavedDaysSinceItems(status) {
+    return loadSavedItems().filter(item => item.type === 'dayssince' && (status ? item.status === status : item.status !== 'archived'));
+}
+
+function archiveItem(id, extraData = {}) {
+    updateItem(id, { status: 'archived', ...extraData });
+}
+
+function unarchiveItem(id) {
+    updateItem(id, { status: 'active' });
+}
+
+function calculateDaysBetween(m1, d1, y1, m2, d2, y2) {
+    const date1 = new Date(y1, m1 - 1, d1);
+    const date2 = new Date(y2, m2 - 1, d2);
+    date1.setHours(0, 0, 0, 0);
+    date2.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.floor((date2 - date1) / (1000 * 60 * 60 * 24)));
 }
 
 function formatCurrency(amount) {

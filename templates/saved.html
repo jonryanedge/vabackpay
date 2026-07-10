@@ -16,6 +16,11 @@
 				<div id="dayssince-list" class="saved-list"></div>
 			</div>
 
+			<div id="archived-section" class="saved-section" style="display: none;">
+				<h2 class="saved-section-title archived-section-title">Closed Trackers</h2>
+				<div id="archived-list" class="saved-list"></div>
+			</div>
+
 			<div id="empty-state" class="card" style="display: none;">
 				<p style="text-align: center; color: var(--text-secondary);">No saved items yet. Calculate something and save it to see it here.</p>
 			</div>
@@ -47,6 +52,73 @@
 			<div style="display: flex; gap: 1rem;">
 				<button id="delete-modal-cancel" class="btn-secondary" style="flex: 1;">Cancel</button>
 				<button id="delete-modal-confirm" style="flex: 1; background-color: #d9534f;">Delete</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="archive-modal" class="modal-overlay">
+		<div class="modal">
+			<h2>Close Tracker</h2>
+
+			<div id="archive-dayssince-fields" style="display: none;">
+				<div class="form-group">
+					<label>When was this claim decided?</label>
+					<div class="form-row">
+						<div class="form-group">
+							<select id="archive-ds-month"></select>
+						</div>
+						<div class="form-group">
+							<select id="archive-ds-day"></select>
+						</div>
+						<div class="form-group">
+							<select id="archive-ds-year"></select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="archive-backpay-fields" style="display: none;">
+				<div class="form-group">
+					<label for="archive-bp-rating">Rating received</label>
+					<select id="archive-bp-rating">
+						<option value="0">No rating received</option>
+						<option value="10">10%</option>
+						<option value="20">20%</option>
+						<option value="30">30%</option>
+						<option value="40">40%</option>
+						<option value="50">50%</option>
+						<option value="60">60%</option>
+						<option value="70">70%</option>
+						<option value="80">80%</option>
+						<option value="90">90%</option>
+						<option value="100">100%</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label>When was this claim decided?</label>
+					<div class="form-row">
+						<div class="form-group">
+							<select id="archive-bp-month"></select>
+						</div>
+						<div class="form-group">
+							<select id="archive-bp-year"></select>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="archive-bp-appeal">Appeal status</label>
+					<select id="archive-bp-appeal">
+						<option value="none">Not appealing</option>
+						<option value="appealed">Appealing</option>
+						<option value="approved">Appeal approved</option>
+						<option value="denied">Appeal denied</option>
+					</select>
+				</div>
+			</div>
+
+			<div style="display: flex; gap: 1rem; margin-top: 1rem;">
+				<button id="archive-modal-cancel" class="btn-secondary" style="flex: 1;">Cancel</button>
+				<button id="archive-modal-confirm" style="flex: 1;">Close Tracker</button>
 			</div>
 		</div>
 	</div>
@@ -162,223 +234,482 @@
 			width: 1rem;
 			height: 1rem;
 		}
+
+		.archived-section-title {
+			color: var(--text-tertiary, #808080);
+		}
+
+		.saved-card.archived {
+			opacity: 0.7;
+			cursor: default;
+		}
+
+		.saved-card.archived:hover {
+			border-color: var(--border);
+		}
+
+		.saved-card.archived .saved-card-amount {
+			color: var(--text-secondary);
+		}
+
+		.archive-btn:hover {
+			color: #f0ad4e;
+		}
+
+		.unarchive-btn:hover {
+			color: var(--success);
+		}
+
+		.appeal-badge {
+			display: inline-block;
+			font-size: 0.75rem;
+			font-weight: 600;
+			padding: 0.15rem 0.5rem;
+			border-radius: 4px;
+			margin-top: 0.35rem;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+		}
+
+		.appeal-badge.appeal-pending {
+			background-color: rgba(240, 173, 78, 0.15);
+			color: #f0ad4e;
+		}
+
+		.appeal-badge.appeal-approved {
+			background-color: rgba(76, 175, 80, 0.15);
+			color: var(--success);
+		}
+
+		.appeal-badge.appeal-denied {
+			background-color: rgba(217, 83, 79, 0.15);
+			color: #d9534f;
+		}
 	</style>
 
-	<script>
-		function showPrivacyModal() {
-			document.getElementById('privacy-modal').classList.add('active');
+<script>
+	let pendingSaveCallback = null;
+	let pendingDeleteId = null;
+	let pendingArchiveId = null;
+	let pendingArchiveType = null;
+
+	function showPrivacyModal() {
+		document.getElementById('privacy-modal').classList.add('active');
+	}
+
+	function hidePrivacyModal() {
+		document.getElementById('privacy-modal').classList.remove('active');
+	}
+
+	function showNameModal(callback) {
+		pendingSaveCallback = callback;
+		document.getElementById('name-input').value = '';
+		document.getElementById('name-modal').classList.add('active');
+		document.getElementById('name-input').focus();
+	}
+
+	function hideNameModal() {
+		document.getElementById('name-modal').classList.remove('active');
+		pendingSaveCallback = null;
+	}
+
+	document.getElementById('name-modal-cancel').addEventListener('click', hideNameModal);
+	document.getElementById('name-modal-save').addEventListener('click', function() {
+		const name = document.getElementById('name-input').value.trim() || 'Untitled';
+		if (pendingSaveCallback) {
+			pendingSaveCallback(name);
 		}
+		hideNameModal();
+	});
 
-		function hidePrivacyModal() {
-			document.getElementById('privacy-modal').classList.remove('active');
+	document.getElementById('name-input').addEventListener('keypress', function(e) {
+		if (e.key === 'Enter') {
+			document.getElementById('name-modal-save').click();
 		}
+	});
 
-		let pendingSaveCallback = null;
-		let pendingDeleteId = null;
+	function showDeleteModal(id, name) {
+		pendingDeleteId = id;
+		document.getElementById('delete-item-name').textContent = name;
+		document.getElementById('delete-modal').classList.add('active');
+	}
 
-		function showNameModal(callback) {
-			pendingSaveCallback = callback;
-			document.getElementById('name-input').value = '';
-			document.getElementById('name-modal').classList.add('active');
-			document.getElementById('name-input').focus();
-		}
+	function hideDeleteModal() {
+		document.getElementById('delete-modal').classList.remove('active');
+		pendingDeleteId = null;
+	}
 
-		function hideNameModal() {
-			document.getElementById('name-modal').classList.remove('active');
-			pendingSaveCallback = null;
-		}
-
-		document.getElementById('name-modal-cancel').addEventListener('click', hideNameModal);
-		document.getElementById('name-modal-save').addEventListener('click', function() {
-			const name = document.getElementById('name-input').value.trim() || 'Untitled';
-			if (pendingSaveCallback) {
-				pendingSaveCallback(name);
-			}
-			hideNameModal();
-		});
-
-		document.getElementById('name-input').addEventListener('keypress', function(e) {
-			if (e.key === 'Enter') {
-				document.getElementById('name-modal-save').click();
-			}
-		});
-
-		function showDeleteModal(id, name) {
-			pendingDeleteId = id;
-			document.getElementById('delete-item-name').textContent = name;
-			document.getElementById('delete-modal').classList.add('active');
-		}
-
-		function hideDeleteModal() {
-			document.getElementById('delete-modal').classList.remove('active');
-			pendingDeleteId = null;
-		}
-
-		document.getElementById('delete-modal-cancel').addEventListener('click', hideDeleteModal);
-		document.getElementById('delete-modal-confirm').addEventListener('click', function() {
-			if (pendingDeleteId) {
-				deleteItem(pendingDeleteId);
-				renderSavedItems();
-			}
-			hideDeleteModal();
-		});
-
-		function showClearModal() {
-			document.getElementById('clear-modal').classList.add('active');
-		}
-
-		function hideClearModal() {
-			document.getElementById('clear-modal').classList.remove('active');
-		}
-
-		document.getElementById('clear-modal-cancel').addEventListener('click', hideClearModal);
-		document.getElementById('clear-modal-confirm').addEventListener('click', function() {
-			clearAllItems();
+	document.getElementById('delete-modal-cancel').addEventListener('click', hideDeleteModal);
+	document.getElementById('delete-modal-confirm').addEventListener('click', function() {
+		if (pendingDeleteId) {
+			deleteItem(pendingDeleteId);
 			renderSavedItems();
-			hideClearModal();
-		});
+		}
+		hideDeleteModal();
+	});
 
-		function renderBackpayCard(item) {
-			return `
-				<div class="saved-card" data-id="${item.id}">
-					<div class="saved-card-content">
-						<div class="saved-card-name-wrapper">
-							<span class="saved-card-name" data-id="${item.id}">${item.name}</span>
-							<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
-						</div>
-						<div class="saved-card-details">
-							<span>${formatDate(item.startMonth, 1, item.startYear)} - ${item.endMonth ? formatDate(item.endMonth, 1, item.endYear) : 'Present'}</span>
-							<span>${item.rating}% rating${item.dependents > 0 ? ' + ' + item.dependents + ' dependent' + (item.dependents > 1 ? 's' : '') : ''}</span>
-						</div>
-						<div class="saved-card-amount">${formatCurrency(getCurrentBackpayAmount(item))}</div>
-					</div>
-					<div class="saved-card-actions">
-						<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-							</svg>
-						</button>
-						<button class="saved-action-btn delete-btn" data-id="${item.id}" data-name="${item.name}" title="Delete">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<polyline points="3 6 5 6 21 6"/>
-								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-							</svg>
-						</button>
-					</div>
-				</div>
-			`;
+	function populateDateSelects(prefix, hasDay) {
+		const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+		const today = new Date();
+		const currentMonth = today.getMonth() + 1;
+		const currentYear = today.getFullYear();
+		const currentDay = today.getDate();
+
+		const monthSelect = document.getElementById(prefix + '-month');
+		monthSelect.innerHTML = months.map((m, i) => '<option value="' + (i + 1) + '">' + m + '</option>').join('');
+		monthSelect.value = currentMonth;
+
+		if (hasDay) {
+			const daySelect = document.getElementById(prefix + '-day');
+			daySelect.innerHTML = Array.from({length: 31}, (_, i) => '<option value="' + (i + 1) + '">' + (i + 1) + '</option>').join('');
+			daySelect.value = currentDay;
 		}
 
-		function renderDaysSinceCard(item) {
-			const days = calculateDaysSince(item.month, item.day, item.year);
-			return `
-				<div class="saved-card" data-id="${item.id}">
-					<div class="saved-card-content">
-						<div class="saved-card-name-wrapper">
-							<span class="saved-card-name" data-id="${item.id}">${item.name}</span>
-							<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
-						</div>
-						<div class="saved-card-details">
-							<span>${formatDate(item.month, item.day, item.year)}</span>
-						</div>
-						<div class="saved-card-amount">${days} days</div>
-					</div>
-					<div class="saved-card-actions">
-						<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-							</svg>
-						</button>
-						<button class="saved-action-btn delete-btn" data-id="${item.id}" data-name="${item.name}" title="Delete">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<polyline points="3 6 5 6 21 6"/>
-								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-							</svg>
-						</button>
-					</div>
-				</div>
-			`;
+		const yearSelect = document.getElementById(prefix + '-year');
+		yearSelect.innerHTML = '';
+		for (let y = currentYear; y >= 2000; y--) {
+			yearSelect.innerHTML += '<option value="' + y + '">' + y + '</option>';
 		}
+		yearSelect.value = currentYear;
+	}
 
-		function renderSavedItems() {
-			const backpayItems = getSavedBackpayItems();
-			const daysSinceItems = getSavedDaysSinceItems();
-			
-			const backpaySection = document.getElementById('backpay-section');
-			const daysSinceSection = document.getElementById('dayssince-section');
-			const emptyState = document.getElementById('empty-state');
-			
-			backpaySection.style.display = backpayItems.length > 0 ? 'block' : 'none';
-			daysSinceSection.style.display = daysSinceItems.length > 0 ? 'block' : 'none';
-			
-			if (backpayItems.length === 0 && daysSinceItems.length === 0) {
-				emptyState.style.display = 'block';
-				return;
+	function showArchiveModal(id, name, type) {
+		pendingArchiveId = id;
+		pendingArchiveType = type;
+
+		const dsFields = document.getElementById('archive-dayssince-fields');
+		const bpFields = document.getElementById('archive-backpay-fields');
+		dsFields.style.display = 'none';
+		bpFields.style.display = 'none';
+
+		const item = getSavedItem(id);
+
+		if (type === 'dayssince') {
+			dsFields.style.display = 'block';
+			populateDateSelects('archive-ds', true);
+		} else if (type === 'backpay') {
+			bpFields.style.display = 'block';
+			populateDateSelects('archive-bp', false);
+
+			if (item) {
+				document.getElementById('archive-bp-rating').value = String(item.rating);
+
+				if (item.endMonth != null) {
+					document.getElementById('archive-bp-month').value = String(item.endMonth);
+					document.getElementById('archive-bp-year').value = String(item.endYear);
+				}
 			}
-			emptyState.style.display = 'none';
-			
-			document.getElementById('backpay-list').innerHTML = backpayItems.map(renderBackpayCard).join('');
-			document.getElementById('dayssince-list').innerHTML = daysSinceItems.map(renderDaysSinceCard).join('');
-			
-			document.querySelectorAll('.saved-card-content').forEach(card => {
-				card.addEventListener('click', function(e) {
-					if (e.target.closest('.saved-action-btn') || e.target.closest('.saved-card-name-input')) return;
-					const id = this.closest('.saved-card').dataset.id;
-					const item = getSavedItem(id);
-					if (item) {
-						if (item.type === 'backpay') {
-							let url = `/backpay?id=${item.id}&sm=${item.startMonth}&sy=${item.startYear}&r=${item.rating}&d=${item.dependents}`;
-							if (item.endMonth !== null) {
-								url += `&em=${item.endMonth}&ey=${item.endYear}`;
-							}
-							window.location.href = url;
-						} else {
-							window.location.href = `/days-since?id=${item.id}&m=${item.month}&d=${item.day}&y=${item.year}`;
-						}
-					}
-				});
-			});
-			
-			document.querySelectorAll('.edit-btn').forEach(btn => {
-				btn.addEventListener('click', function(e) {
-					e.stopPropagation();
-					const id = this.dataset.id;
-					const nameSpan = document.querySelector(`.saved-card-name[data-id="${id}"]`);
-					const nameInput = document.querySelector(`.saved-card-name-input[data-id="${id}"]`);
-					nameSpan.style.display = 'none';
-					nameInput.style.display = 'inline';
-					nameInput.focus();
-					nameInput.select();
-				});
-			});
-			
-			document.querySelectorAll('.saved-card-name-input').forEach(input => {
-				input.addEventListener('blur', function() {
-					const id = this.dataset.id;
-					const newName = this.value.trim() || 'Untitled';
-					updateItem(id, { name: newName });
-					const nameSpan = document.querySelector(`.saved-card-name[data-id="${id}"]`);
-					nameSpan.textContent = newName;
-					nameSpan.style.display = 'inline';
-					this.style.display = 'none';
-				});
-				input.addEventListener('keypress', function(e) {
-					if (e.key === 'Enter') {
-						this.blur();
-					}
-				});
-			});
-			
-			document.querySelectorAll('.delete-btn').forEach(btn => {
-				btn.addEventListener('click', function(e) {
-					e.stopPropagation();
-					showDeleteModal(this.dataset.id, this.dataset.name);
-				});
-			});
 		}
 
+		document.getElementById('archive-modal').classList.add('active');
+	}
+
+	function hideArchiveModal() {
+		document.getElementById('archive-modal').classList.remove('active');
+		pendingArchiveId = null;
+		pendingArchiveType = null;
+	}
+
+	document.getElementById('archive-modal-cancel').addEventListener('click', hideArchiveModal);
+	document.getElementById('archive-modal-confirm').addEventListener('click', function() {
+		if (pendingArchiveId && pendingArchiveType) {
+			const item = getSavedItem(pendingArchiveId);
+			if (!item) { hideArchiveModal(); return; }
+
+			let extraData = {};
+
+			if (pendingArchiveType === 'dayssince') {
+				const dm = parseInt(document.getElementById('archive-ds-month').value);
+				const dd = parseInt(document.getElementById('archive-ds-day').value);
+				const dy = parseInt(document.getElementById('archive-ds-year').value);
+				extraData = {
+					decidedMonth: dm,
+					decidedDay: dd,
+					decidedYear: dy,
+					archivedDays: calculateDaysBetween(item.month, item.day, item.year, dm, dd, dy)
+				};
+			} else if (pendingArchiveType === 'backpay') {
+				const ratingVal = parseInt(document.getElementById('archive-bp-rating').value);
+				const dm = parseInt(document.getElementById('archive-bp-month').value);
+				const dy = parseInt(document.getElementById('archive-bp-year').value);
+				const appeal = document.getElementById('archive-bp-appeal').value;
+				const actualRating = ratingVal === 0 ? null : ratingVal;
+
+				extraData = {
+					actualRating: actualRating,
+					decidedMonth: dm,
+					decidedYear: dy,
+					appeal: appeal,
+					archivedAmount: actualRating !== null ? calculateBackpayTotal(item.startMonth, item.startYear, dm, dy, actualRating, item.dependents) : null
+				};
+			}
+
+			archiveItem(pendingArchiveId, extraData);
+			renderSavedItems();
+		}
+		hideArchiveModal();
+	});
+
+	function showClearModal() {
+		document.getElementById('clear-modal').classList.add('active');
+	}
+
+	function hideClearModal() {
+		document.getElementById('clear-modal').classList.remove('active');
+	}
+
+	document.getElementById('clear-modal-cancel').addEventListener('click', hideClearModal);
+	document.getElementById('clear-modal-confirm').addEventListener('click', function() {
+		clearAllItems();
 		renderSavedItems();
-	</script>
+		hideClearModal();
+	});
+
+	function renderBackpayCard(item) {
+		const isArchived = item.status === 'archived';
+		const archivedClass = isArchived ? ' archived' : '';
+
+		let displayEnd, displayRating, displayAmount, appealBadge = '';
+
+		if (isArchived) {
+			const endM = item.decidedMonth || item.endMonth;
+			const endY = item.decidedYear || item.endYear;
+			displayEnd = endM ? formatDate(endM, 1, endY) : 'Present';
+
+			if (item.actualRating !== null && item.actualRating !== undefined) {
+				displayRating = item.actualRating + '% rating' + (item.dependents > 0 ? ' + ' + item.dependents + ' dependent' + (item.dependents > 1 ? 's' : '') : '');
+				if (item.actualRating !== item.rating) {
+					displayRating = item.rating + '% \u2192 ' + item.actualRating + '% rating' + (item.dependents > 0 ? ' + ' + item.dependents + ' dependent' + (item.dependents > 1 ? 's' : '') : '');
+				}
+				displayAmount = item.archivedAmount !== null && item.archivedAmount !== undefined
+					? formatCurrency(item.archivedAmount) + ' (closed)'
+					: 'Calculated (closed)';
+			} else {
+				displayRating = item.rating + '% \u2192 No rating';
+				displayAmount = 'No rating received (closed)';
+			}
+
+			if (item.appeal && item.appeal !== 'none') {
+				const labels = { appealed: 'Appealing', approved: 'Appeal Approved', denied: 'Appeal Denied' };
+				const classes = { appealed: 'appeal-pending', approved: 'appeal-approved', denied: 'appeal-denied' };
+				appealBadge = '<span class="appeal-badge ' + classes[item.appeal] + '">' + labels[item.appeal] + '</span>';
+			}
+		} else {
+			displayEnd = item.endMonth ? formatDate(item.endMonth, 1, item.endYear) : 'Present';
+			displayRating = item.rating + '% rating' + (item.dependents > 0 ? ' + ' + item.dependents + ' dependent' + (item.dependents > 1 ? 's' : '') : '');
+			displayAmount = formatCurrency(getCurrentBackpayAmount(item));
+		}
+
+		return `
+			<div class="saved-card${archivedClass}" data-id="${item.id}">
+				<div class="saved-card-content">
+					<div class="saved-card-name-wrapper">
+						<span class="saved-card-name" data-id="${item.id}">${item.name}</span>
+						<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
+					</div>
+					<div class="saved-card-details">
+						<span>${formatDate(item.startMonth, 1, item.startYear)} - ${displayEnd}</span>
+						<span>${displayRating}</span>
+					</div>
+					<div class="saved-card-amount">${displayAmount}</div>
+					${appealBadge}
+				</div>
+				<div class="saved-card-actions">
+					${isArchived ? `
+					<button class="saved-action-btn unarchive-btn" data-id="${item.id}" title="Reopen">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="1 4 1 10 7 10"/>
+							<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+						</svg>
+					</button>
+					` : `
+					<button class="saved-action-btn archive-btn" data-id="${item.id}" data-name="${item.name}" data-type="${item.type}" title="Close tracker">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="21 8 21 21 3 21 3 8"/>
+							<rect x="1" y="3" width="22" height="5"/>
+							<line x1="10" y1="12" x2="14" y2="12"/>
+						</svg>
+					</button>
+					<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+						</svg>
+					</button>
+					`}
+					<button class="saved-action-btn delete-btn" data-id="${item.id}" data-name="${item.name}" title="Delete">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="3 6 5 6 21 6"/>
+							<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		`;
+	}
+
+	function renderDaysSinceCard(item) {
+		const isArchived = item.status === 'archived';
+		const archivedClass = isArchived ? ' archived' : '';
+
+		let displayDate, displayAmount;
+
+		if (isArchived && item.decidedMonth != null) {
+			displayDate = formatDate(item.month, item.day, item.year) + ' \u2192 ' + formatDate(item.decidedMonth, item.decidedDay, item.decidedYear);
+			displayAmount = item.archivedDays + ' days (closed)';
+		} else if (isArchived) {
+			displayDate = formatDate(item.month, item.day, item.year);
+			displayAmount = calculateDaysSince(item.month, item.day, item.year) + ' days (closed)';
+		} else {
+			displayDate = formatDate(item.month, item.day, item.year);
+			displayAmount = calculateDaysSince(item.month, item.day, item.year) + ' days';
+		}
+
+		return `
+			<div class="saved-card${archivedClass}" data-id="${item.id}">
+				<div class="saved-card-content">
+					<div class="saved-card-name-wrapper">
+						<span class="saved-card-name" data-id="${item.id}">${item.name}</span>
+						<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
+					</div>
+					<div class="saved-card-details">
+						<span>${displayDate}</span>
+					</div>
+					<div class="saved-card-amount">${displayAmount}</div>
+				</div>
+				<div class="saved-card-actions">
+					${isArchived ? `
+					<button class="saved-action-btn unarchive-btn" data-id="${item.id}" title="Reopen">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="1 4 1 10 7 10"/>
+							<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+						</svg>
+					</button>
+					` : `
+					<button class="saved-action-btn archive-btn" data-id="${item.id}" data-name="${item.name}" data-type="${item.type}" title="Close tracker">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="21 8 21 21 3 21 3 8"/>
+							<rect x="1" y="3" width="22" height="5"/>
+							<line x1="10" y1="12" x2="14" y2="12"/>
+						</svg>
+					</button>
+					<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+						</svg>
+					</button>
+					`}
+					<button class="saved-action-btn delete-btn" data-id="${item.id}" data-name="${item.name}" title="Delete">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="3 6 5 6 21 6"/>
+							<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		`;
+	}
+
+	function renderSavedItems() {
+		const activeBackpay = getSavedBackpayItems();
+		const activeDaysSince = getSavedDaysSinceItems();
+		const allItems = loadSavedItems();
+		const archivedItems = allItems.filter(item => item.status === 'archived');
+		
+		const backpaySection = document.getElementById('backpay-section');
+		const daysSinceSection = document.getElementById('dayssince-section');
+		const archivedSection = document.getElementById('archived-section');
+		const emptyState = document.getElementById('empty-state');
+		
+		backpaySection.style.display = activeBackpay.length > 0 ? 'block' : 'none';
+		daysSinceSection.style.display = activeDaysSince.length > 0 ? 'block' : 'none';
+		archivedSection.style.display = archivedItems.length > 0 ? 'block' : 'none';
+		
+		if (allItems.length === 0) {
+			emptyState.style.display = 'block';
+			return;
+		}
+		emptyState.style.display = 'none';
+		
+		document.getElementById('backpay-list').innerHTML = activeBackpay.map(renderBackpayCard).join('');
+		document.getElementById('dayssince-list').innerHTML = activeDaysSince.map(renderDaysSinceCard).join('');
+		document.getElementById('archived-list').innerHTML = archivedItems.map(item => {
+			return item.type === 'backpay' ? renderBackpayCard(item) : renderDaysSinceCard(item);
+		}).join('');
+		
+		document.querySelectorAll('.saved-card:not(.archived) .saved-card-content').forEach(card => {
+			card.addEventListener('click', function(e) {
+				if (e.target.closest('.saved-action-btn') || e.target.closest('.saved-card-name-input')) return;
+				const id = this.closest('.saved-card').dataset.id;
+				const item = getSavedItem(id);
+				if (item) {
+					if (item.type === 'backpay') {
+						let url = `/backpay?id=${item.id}&sm=${item.startMonth}&sy=${item.startYear}&r=${item.rating}&d=${item.dependents}`;
+						if (item.endMonth !== null) {
+							url += `&em=${item.endMonth}&ey=${item.endYear}`;
+						}
+						window.location.href = url;
+					} else {
+						window.location.href = `/days-since?id=${item.id}&m=${item.month}&d=${item.day}&y=${item.year}`;
+					}
+				}
+			});
+		});
+		
+		document.querySelectorAll('.edit-btn').forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				const id = this.dataset.id;
+				const nameSpan = document.querySelector(`.saved-card-name[data-id="${id}"]`);
+				const nameInput = document.querySelector(`.saved-card-name-input[data-id="${id}"]`);
+				nameSpan.style.display = 'none';
+				nameInput.style.display = 'inline';
+				nameInput.focus();
+				nameInput.select();
+			});
+		});
+		
+		document.querySelectorAll('.saved-card-name-input').forEach(input => {
+			input.addEventListener('blur', function() {
+				const id = this.dataset.id;
+				const newName = this.value.trim() || 'Untitled';
+				updateItem(id, { name: newName });
+				const nameSpan = document.querySelector(`.saved-card-name[data-id="${id}"]`);
+				nameSpan.textContent = newName;
+				nameSpan.style.display = 'inline';
+				this.style.display = 'none';
+			});
+			input.addEventListener('keypress', function(e) {
+				if (e.key === 'Enter') {
+					this.blur();
+				}
+			});
+		});
+		
+		document.querySelectorAll('.delete-btn').forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				showDeleteModal(this.dataset.id, this.dataset.name);
+			});
+		});
+		
+		document.querySelectorAll('.archive-btn').forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				showArchiveModal(this.dataset.id, this.dataset.name, this.dataset.type);
+			});
+		});
+		
+		document.querySelectorAll('.unarchive-btn').forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				unarchiveItem(this.dataset.id);
+				renderSavedItems();
+			});
+		});
+	}
+
+	renderSavedItems();
+</script>
 {{end}}
