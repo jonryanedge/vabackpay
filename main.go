@@ -453,6 +453,20 @@ func savedHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "base", nil)
 }
 
+func ratingHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("base").Parse(readTemplate("templates/layout.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl, err = tmpl.Parse(readTemplate("templates/rating.html"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "base", nil)
+}
+
 func withHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -481,6 +495,7 @@ func main() {
 	http.Handle("/backpay", withHeaders(http.HandlerFunc(backpayHandler)))
 	http.Handle("/days-since", withHeaders(http.HandlerFunc(daysSinceHandler)))
 	http.Handle("/saved", withHeaders(http.HandlerFunc(savedHandler)))
+	http.Handle("/rating", withHeaders(http.HandlerFunc(ratingHandler)))
 	http.Handle("/calculate", withHeaders(http.HandlerFunc(calculateHandler)))
 	http.Handle("/email", withHeaders(http.HandlerFunc(emailHandler)))
 

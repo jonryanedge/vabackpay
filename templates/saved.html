@@ -16,6 +16,11 @@
 				<div id="dayssince-list" class="saved-list"></div>
 			</div>
 
+			<div id="rating-section" class="saved-section" style="display: none;">
+				<h2 class="saved-section-title">Saved Rating Combos</h2>
+				<div id="rating-list" class="saved-list"></div>
+			</div>
+
 			<div id="archived-section" class="saved-section" style="display: none;">
 				<h2 class="saved-section-title archived-section-title">Closed Trackers</h2>
 				<div id="archived-list" class="saved-list"></div>
@@ -284,6 +289,46 @@
 		.appeal-badge.appeal-denied {
 			background-color: rgba(217, 83, 79, 0.15);
 			color: #d9534f;
+		}
+
+		.rating-chart-container {
+			margin: 0.35rem 0;
+		}
+
+		.rating-chart {
+			display: flex;
+			width: 100%;
+			max-width: 320px;
+			height: 1.75rem;
+			border-radius: 4px;
+			overflow: hidden;
+			border: 1px solid var(--border);
+			background: var(--bg-tertiary);
+		}
+
+		.rating-chart-slice {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.7rem;
+			font-weight: 700;
+			color: white;
+			text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+			white-space: nowrap;
+			overflow: hidden;
+			flex-shrink: 0;
+		}
+
+		.rating-chart-line {
+			flex-shrink: 0;
+			width: 3px;
+			height: 100%;
+		}
+
+		.rating-chart-meta {
+			font-size: 0.75rem;
+			color: var(--text-secondary);
+			margin-top: 0.3rem;
 		}
 	</style>
 
@@ -611,19 +656,113 @@
 		`;
 	}
 
+	function renderRatingCard(item) {
+		const isArchived = item.status === 'archived';
+		const archivedClass = isArchived ? ' archived' : '';
+
+		const conds = item.conditions || (item.ratings || []).map(r => ({ rating: r, label: '' }));
+		const raw = item.rawPercentage != null ? item.rawPercentage.toFixed(1) + '%' : '--';
+		const rounded = item.roundedRating != null ? item.roundedRating + '%' : '--';
+
+		let displayAmount;
+		if (isArchived) {
+			displayAmount = rounded + ' (raw ' + raw + ') (closed)';
+		} else {
+			displayAmount = rounded + ' (raw ' + raw + ')';
+		}
+
+		const palette = ['#4a90d9','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#3498db','#e91e63','#16a085','#d35400','#95a5a6'];
+		const sorted = [...conds].sort((a, b) => b.rating - a.rating);
+		const maxRating = sorted.length > 0 ? sorted[0].rating : 0;
+
+		const showLabel = new Array(conds.length).fill(false);
+		let cumulative = 0;
+		for (let i = 0; i < sorted.length; i++) {
+			if (sorted[i].rating <= 10) break;
+			if (i >= 3) break;
+			if (cumulative >= 80 && i >= 1) break;
+			const origIdx = conds.indexOf(sorted[i]);
+			showLabel[origIdx] = true;
+			cumulative += sorted[i].rating;
+			if (cumulative >= 60) break;
+		}
+
+		let chartHtml = '';
+		if (conds.length > 0) {
+			let bars = '';
+			conds.forEach((c, i) => {
+				const color = palette[i % palette.length];
+				const label = c.label ? c.label + ' ' : '';
+				if (c.rating <= 10) {
+					bars += `<span class="rating-chart-line" style="background:${color}" title="${label}${c.rating}%"></span>`;
+				} else {
+					bars += `<span class="rating-chart-slice" style="width:${c.rating}%;background:${color}" title="${label}${c.rating}%">${showLabel[i] ? c.rating + '%' : ''}</span>`;
+				}
+			});
+			chartHtml = `<div class="rating-chart">${bars}</div>`;
+			chartHtml += `<div class="rating-chart-meta">Highest: ${maxRating}% &middot; ${conds.length} condition${conds.length !== 1 ? 's' : ''}</div>`;
+		}
+
+		return `
+			<div class="saved-card${archivedClass}" data-id="${item.id}">
+				<div class="saved-card-content">
+					<div class="saved-card-name-wrapper">
+						<span class="saved-card-name" data-id="${item.id}">${item.name}</span>
+						<input type="text" class="saved-card-name-input" data-id="${item.id}" value="${item.name}" style="display: none;">
+					</div>
+					<div class="rating-chart-container">${chartHtml}</div>
+					<div class="saved-card-amount">${displayAmount}</div>
+				</div>
+				<div class="saved-card-actions">
+					${isArchived ? `
+					<button class="saved-action-btn unarchive-btn" data-id="${item.id}" title="Reopen">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="1 4 1 10 7 10"/>
+							<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+						</svg>
+					</button>
+					` : `
+					<button class="saved-action-btn archive-btn" data-id="${item.id}" data-name="${item.name}" data-type="${item.type}" title="Close tracker">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="21 8 21 21 3 21 3 8"/>
+							<rect x="1" y="3" width="22" height="5"/>
+							<line x1="10" y1="12" x2="14" y2="12"/>
+						</svg>
+					</button>
+					<button class="saved-action-btn edit-btn" data-id="${item.id}" title="Edit name">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+						</svg>
+					</button>
+					`}
+					<button class="saved-action-btn delete-btn" data-id="${item.id}" data-name="${item.name}" title="Delete">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="3 6 5 6 21 6"/>
+							<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		`;
+	}
+
 	function renderSavedItems() {
 		const activeBackpay = getSavedBackpayItems();
 		const activeDaysSince = getSavedDaysSinceItems();
+		const activeRatings = getSavedRatingItems();
 		const allItems = loadSavedItems();
 		const archivedItems = allItems.filter(item => item.status === 'archived');
 		
 		const backpaySection = document.getElementById('backpay-section');
 		const daysSinceSection = document.getElementById('dayssince-section');
+		const ratingSection = document.getElementById('rating-section');
 		const archivedSection = document.getElementById('archived-section');
 		const emptyState = document.getElementById('empty-state');
 		
 		backpaySection.style.display = activeBackpay.length > 0 ? 'block' : 'none';
 		daysSinceSection.style.display = activeDaysSince.length > 0 ? 'block' : 'none';
+		ratingSection.style.display = activeRatings.length > 0 ? 'block' : 'none';
 		archivedSection.style.display = archivedItems.length > 0 ? 'block' : 'none';
 		
 		if (allItems.length === 0) {
@@ -634,8 +773,11 @@
 		
 		document.getElementById('backpay-list').innerHTML = activeBackpay.map(renderBackpayCard).join('');
 		document.getElementById('dayssince-list').innerHTML = activeDaysSince.map(renderDaysSinceCard).join('');
+		document.getElementById('rating-list').innerHTML = activeRatings.map(renderRatingCard).join('');
 		document.getElementById('archived-list').innerHTML = archivedItems.map(item => {
-			return item.type === 'backpay' ? renderBackpayCard(item) : renderDaysSinceCard(item);
+			if (item.type === 'backpay') return renderBackpayCard(item);
+			if (item.type === 'dayssince') return renderDaysSinceCard(item);
+			return renderRatingCard(item);
 		}).join('');
 		
 		document.querySelectorAll('.saved-card:not(.archived) .saved-card-content').forEach(card => {
@@ -650,8 +792,10 @@
 							url += `&em=${item.endMonth}&ey=${item.endYear}`;
 						}
 						window.location.href = url;
-					} else {
+					} else if (item.type === 'dayssince') {
 						window.location.href = `/days-since?id=${item.id}&m=${item.month}&d=${item.day}&y=${item.year}`;
+					} else if (item.type === 'rating') {
+						window.location.href = `/rating?id=${item.id}`;
 					}
 				}
 			});

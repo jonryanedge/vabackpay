@@ -1,5 +1,7 @@
-const COOKIE_NAME = 'vabackpay_saved';
-const MAX_ITEMS = 10;
+const STORAGE_KEY = 'vabackpay_data';
+const LEGACY_COOKIE_NAME = 'vabackpay_saved';
+const DATA_VERSION = 1;
+const MAX_ITEMS = 50;
 
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -12,64 +14,135 @@ function getCookie(name) {
     return null;
 }
 
-function setCookie(name, value, days = 365) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+function migrateLegacyCookie() {
+    const cookie = getCookie(LEGACY_COOKIE_NAME);
+    if (!cookie) return;
+
+    try {
+        const items = JSON.parse(decodeURIComponent(cookie));
+        if (Array.isArray(items) && items.length > 0) {
+            const existing = loadData();
+            const existingIds = new Set((existing.items || []).map(i => i.id));
+            const newItems = items.filter(i => !existingIds.has(i.id));
+            existing.items = [...newItems, ...(existing.items || [])];
+            if (existing.items.length > MAX_ITEMS) {
+                existing.items = existing.items.slice(0, MAX_ITEMS);
+            }
+            existing.migratedAt = new Date().toISOString();
+            saveData(existing);
+        }
+    } catch (e) {
+    }
+
+    document.cookie = `${LEGACY_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
 }
 
-function loadSavedItems() {
-    const cookie = getCookie(COOKIE_NAME);
-    if (!cookie) return [];
+function createEmptyData() {
+    return {
+        version: DATA_VERSION,
+        items: [],
+        user: null,
+        createdAt: new Date().toISOString(),
+        migratedAt: null
+    };
+}
+
+function loadData() {
     try {
-        return JSON.parse(decodeURIComponent(cookie));
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createEmptyData();
+        const data = JSON.parse(raw);
+        if (typeof data !== 'object' || data === null) return createEmptyData();
+        if (!data.items) data.items = [];
+        if (!data.version) data.version = DATA_VERSION;
+        if (data.user === undefined) data.user = null;
+        return data;
     } catch (e) {
-        return [];
+        return createEmptyData();
     }
 }
 
+function saveData(data) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+    }
+}
+
+(function initializeStorage() {
+    migrateLegacyCookie();
+    const data = loadData();
+    if (!localStorage.getItem(STORAGE_KEY)) {
+        saveData(data);
+    }
+})();
+
+function loadSavedItems() {
+    return loadData().items;
+}
+
 function saveAllItems(items) {
-    setCookie(COOKIE_NAME, JSON.stringify(items));
+    const data = loadData();
+    data.items = items;
+    saveData(data);
 }
 
 function saveItem(item) {
-    const items = loadSavedItems();
+    const data = loadData();
     const newItem = {
         id: generateId(),
         savedAt: new Date().toISOString(),
         ...item
     };
-    items.unshift(newItem);
-    if (items.length > MAX_ITEMS) {
-        items.pop();
+    data.items.unshift(newItem);
+    if (data.items.length > MAX_ITEMS) {
+        data.items.pop();
     }
-    saveAllItems(items);
+    saveData(data);
     return newItem;
 }
 
 function updateItem(id, updates) {
-    const items = loadSavedItems();
-    const index = items.findIndex(item => item.id === id);
+    const data = loadData();
+    const index = data.items.findIndex(item => item.id === id);
     if (index !== -1) {
-        items[index] = { ...items[index], ...updates };
-        saveAllItems(items);
-        return items[index];
+        data.items[index] = { ...data.items[index], ...updates };
+        saveData(data);
+        return data.items[index];
     }
     return null;
 }
 
 function deleteItem(id) {
-    const items = loadSavedItems();
-    const filtered = items.filter(item => item.id !== id);
-    saveAllItems(filtered);
+    const data = loadData();
+    data.items = data.items.filter(item => item.id !== id);
+    saveData(data);
 }
 
 function clearAllItems() {
-    setCookie(COOKIE_NAME, '');
+    const data = loadData();
+    data.items = [];
+    saveData(data);
 }
 
 function getSavedItem(id) {
-    const items = loadSavedItems();
-    return items.find(item => item.id === id) || null;
+    return loadData().items.find(item => item.id === id) || null;
+}
+
+function getUser() {
+    return loadData().user;
+}
+
+function setUser(user) {
+    const data = loadData();
+    data.user = user;
+    saveData(data);
+}
+
+function clearUser() {
+    const data = loadData();
+    data.user = null;
+    saveData(data);
 }
 
 function getSavedBackpayItems(status) {
@@ -78,6 +151,30 @@ function getSavedBackpayItems(status) {
 
 function getSavedDaysSinceItems(status) {
     return loadSavedItems().filter(item => item.type === 'dayssince' && (status ? item.status === status : item.status !== 'archived'));
+}
+
+function getSavedRatingItems(status) {
+    return loadSavedItems().filter(item => item.type === 'rating' && (status ? item.status === status : item.status !== 'archived'));
+}
+
+function calculateCombinedRating(ratings) {
+    if (!ratings || ratings.length === 0) return { raw: 0, rounded: 0, steps: [] };
+
+    const sorted = [...ratings].sort((a, b) => b - a);
+    let combined = sorted[0];
+    const steps = [{ rating: sorted[0], combined: combined, remaining: 100 - combined }];
+
+    for (let i = 1; i < sorted.length; i++) {
+        const remaining = 100 - combined;
+        const additional = sorted[i] * remaining / 100;
+        combined = combined + additional;
+        steps.push({ rating: sorted[i], combined: Math.round(combined * 10) / 10, remaining: Math.round((100 - combined) * 10) / 10 });
+    }
+
+    const raw = Math.round(combined * 10) / 10;
+    const rounded = Math.round(Math.round(combined) / 10) * 10;
+
+    return { raw: raw, rounded: rounded, steps: steps };
 }
 
 function archiveItem(id, extraData = {}) {

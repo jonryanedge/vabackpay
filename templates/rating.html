@@ -1,0 +1,384 @@
+{{define "title"}}Combined Rating Calculator - VA Calculator{{end}}
+
+{{define "header-title"}}Combined Rating Calculator{{end}}
+
+{{define "header-subtitle"}}Calculate your combined VA disability rating{{end}}
+
+{{define "content"}}
+		<div class="card">
+			<div class="form-section">
+				<div class="form-section-title">Add Disability Ratings</div>
+				<p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Tap the ratings for each of your service-connected conditions. Add the same rating twice if needed.</p>
+				<div class="rating-matrix">
+					<button type="button" class="rating-matrix-btn" data-rating="10">10%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="20">20%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="30">30%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="40">40%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="50">50%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="60">60%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="70">70%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="80">80%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="90">90%</button>
+					<button type="button" class="rating-matrix-btn" data-rating="100">100%</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="rating-result-container" style="display: none;">
+			<div class="total-backpay">
+				<h2>Combined Rating</h2>
+				<div class="amount" id="rounded-rating-result">0%</div>
+				<p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.95rem;">Raw: <span id="raw-rating-result">0%</span></p>
+			</div>
+
+			<div class="card">
+				<div class="form-section-title">Your Conditions</div>
+				<div id="rating-list" class="rating-list"></div>
+				<button id="clear-ratings-btn" class="btn-secondary" style="margin-top: 1rem; width: 100%;">Clear All</button>
+			</div>
+
+			<button id="save-btn" class="btn-secondary" style="margin-top: 1rem;">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;">
+					<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+					<polyline points="17 21 17 13 7 13 7 21"/>
+					<polyline points="7 3 7 8 15 8"/>
+				</svg>
+				Save Rating Combo
+			</button>
+		</div>
+{{end}}
+
+{{define "modals"}}
+	{{template "privacy-modal" .}}
+
+	<div id="save-modal" class="modal-overlay">
+		<div class="modal">
+			<h2>Save Rating Combo</h2>
+			<p>Enter a name for this saved rating combination:</p>
+			<div class="form-group">
+				<label for="save-name-input">Name</label>
+				<input type="text" id="save-name-input" placeholder="My Rating Combo" style="width: 100%; padding: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 1rem;">
+			</div>
+			<div style="display: flex; gap: 1rem;">
+				<button id="save-modal-cancel" class="btn-secondary" style="flex: 1;">Cancel</button>
+				<button id="save-modal-confirm" style="flex: 1;">Save</button>
+			</div>
+		</div>
+	</div>
+{{end}}
+
+{{define "scripts"}}
+	<style>
+		.rating-matrix {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+		}
+
+		.rating-matrix-btn {
+			flex: 1;
+			min-width: 80px;
+			padding: 0.875rem 0.5rem;
+			font-size: 1rem;
+			font-weight: 600;
+			text-align: center;
+		}
+
+		.rating-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		.rating-list-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background-color: var(--bg-tertiary);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			padding: 0.6rem 0.8rem;
+		}
+
+		.rating-list-item-left {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			flex: 1;
+			min-width: 0;
+		}
+
+		.rating-list-item-index {
+			font-size: 0.75rem;
+			color: var(--text-secondary);
+			min-width: 1.5rem;
+		}
+
+		.rating-list-item-label {
+			background: var(--bg-secondary);
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			padding: 0.25rem 0.5rem;
+			font-size: 0.875rem;
+			color: var(--text-primary);
+			width: 100%;
+			max-width: 160px;
+		}
+
+		.rating-list-item-label:focus {
+			outline: none;
+			border-color: var(--accent);
+		}
+
+		.rating-list-item-right {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			flex-shrink: 0;
+		}
+
+		.rating-adj-btn {
+			background: none;
+			border: 1px solid var(--border);
+			color: var(--text-secondary);
+			cursor: pointer;
+			width: 1.75rem;
+			height: 1.75rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 4px;
+			padding: 0;
+			flex-shrink: 0;
+		}
+
+		.rating-adj-btn:hover {
+			background: var(--bg-secondary);
+			color: var(--text-primary);
+			border-color: var(--accent);
+		}
+
+		.rating-adj-btn:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
+		}
+
+		.rating-adj-btn svg {
+			width: 0.875rem;
+			height: 0.875rem;
+		}
+
+		.rating-list-item-value {
+			font-weight: 600;
+			color: var(--text-primary);
+			font-size: 1rem;
+			min-width: 2.5rem;
+			text-align: right;
+		}
+
+		.rating-list-item-step {
+			font-size: 0.7rem;
+			color: var(--text-secondary);
+			white-space: nowrap;
+		}
+
+		.rating-list-item-remove {
+			background: none;
+			border: none;
+			color: var(--text-secondary);
+			cursor: pointer;
+			padding: 0.25rem;
+			width: 1.75rem;
+			height: 1.75rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 4px;
+			flex-shrink: 0;
+		}
+
+		.rating-list-item-remove:hover {
+			color: #d9534f;
+			background: rgba(217, 83, 79, 0.1);
+		}
+
+		.rating-list-item-remove svg {
+			width: 1rem;
+			height: 1rem;
+		}
+
+		@media (max-width: 600px) {
+			.rating-matrix-btn {
+				min-width: 70px;
+			}
+
+			.rating-list-item-label {
+				max-width: 100px;
+			}
+
+			.rating-list-item-step {
+				display: none;
+			}
+		}
+	</style>
+
+	<script>
+		let conditions = [];
+
+		function showPrivacyModal() {
+			document.getElementById('privacy-modal').classList.add('active');
+		}
+
+		function hidePrivacyModal() {
+			document.getElementById('privacy-modal').classList.remove('active');
+		}
+
+		function escapeHtml(s) {
+			return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+		}
+
+		document.querySelectorAll('.rating-matrix-btn').forEach(btn => {
+			btn.addEventListener('click', function() {
+				const rating = parseInt(this.dataset.rating);
+				conditions.push({ rating: rating, label: '' });
+				sortConditions();
+				renderRatings();
+			});
+		});
+
+		function sortConditions() {
+			conditions.sort((a, b) => b.rating - a.rating);
+		}
+
+		function removeCondition(index) {
+			conditions.splice(index, 1);
+			renderRatings();
+		}
+
+		function adjustRating(index, delta) {
+			const newRating = conditions[index].rating + delta;
+			if (newRating < 0 || newRating > 100) return;
+			conditions[index].rating = newRating;
+			sortConditions();
+			renderRatings();
+		}
+
+		function updateLabel(index, value) {
+			conditions[index].label = value;
+		}
+
+		function getRatingsOnly() {
+			return conditions.map(c => c.rating);
+		}
+
+		function renderRatings() {
+			const container = document.getElementById('rating-result-container');
+
+			if (conditions.length === 0) {
+				container.style.display = 'none';
+				return;
+			}
+
+			container.style.display = 'block';
+
+			const ratingsOnly = getRatingsOnly();
+			const result = calculateCombinedRating(ratingsOnly);
+
+			document.getElementById('rounded-rating-result').textContent = result.rounded + '%';
+			document.getElementById('raw-rating-result').textContent = result.raw.toFixed(1) + '%';
+
+			const listEl = document.getElementById('rating-list');
+
+			let html = '';
+			result.steps.forEach((step, i) => {
+				const cond = conditions[i];
+				const remainingPct = Math.round((100 - step.combined) * 10) / 10;
+				const label = cond.label || '';
+				html += `
+					<div class="rating-list-item">
+						<div class="rating-list-item-left">
+							<span class="rating-list-item-index">${i + 1}.</span>
+							<input type="text" class="rating-list-item-label" placeholder="Label" value="${escapeHtml(label)}" onchange="updateLabel(${i}, this.value)">
+							<span class="rating-list-item-value">${step.rating}%</span>
+						</div>
+						<div class="rating-list-item-right">
+							<button class="rating-adj-btn" onclick="adjustRating(${i}, -10)" ${step.rating <= 0 ? 'disabled' : ''} title="Decrease 10%">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+									<line x1="5" y1="12" x2="19" y2="12"/>
+								</svg>
+							</button>
+							<button class="rating-adj-btn" onclick="adjustRating(${i}, 10)" ${step.rating >= 100 ? 'disabled' : ''} title="Increase 10%">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+									<line x1="12" y1="5" x2="12" y2="19"/>
+									<line x1="5" y1="12" x2="19" y2="12"/>
+								</svg>
+							</button>
+							<span class="rating-list-item-step">Combined: ${step.combined.toFixed(1)}% | Remaining: ${remainingPct.toFixed(1)}%</span>
+							<button class="rating-list-item-remove" onclick="removeCondition(${i})" title="Remove">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<line x1="18" y1="6" x2="6" y2="18"/>
+									<line x1="6" y1="6" x2="18" y2="18"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+				`;
+			});
+
+			listEl.innerHTML = html;
+		}
+
+		document.getElementById('clear-ratings-btn').addEventListener('click', function() {
+			conditions = [];
+			renderRatings();
+		});
+
+		function showSaveModal() {
+			document.getElementById('save-name-input').value = '';
+			document.getElementById('save-modal').classList.add('active');
+			document.getElementById('save-name-input').focus();
+		}
+
+		function hideSaveModal() {
+			document.getElementById('save-modal').classList.remove('active');
+		}
+
+		document.getElementById('save-btn').addEventListener('click', showSaveModal);
+		document.getElementById('save-modal-cancel').addEventListener('click', hideSaveModal);
+		document.getElementById('save-modal-confirm').addEventListener('click', function() {
+			const name = document.getElementById('save-name-input').value.trim() || 'Untitled';
+			const ratings = getRatingsOnly();
+			const result = calculateCombinedRating(ratings);
+
+			saveItem({
+				type: 'rating',
+				name: name,
+				conditions: conditions.map(c => ({ rating: c.rating, label: c.label || '' })),
+				rawPercentage: result.raw,
+				roundedRating: result.rounded
+			});
+
+			hideSaveModal();
+			window.location.href = '/saved';
+		});
+
+		document.getElementById('save-name-input').addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				document.getElementById('save-modal-confirm').click();
+			}
+		});
+
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.has('id')) {
+			const saved = getSavedItem(urlParams.get('id'));
+			if (saved && saved.type === 'rating' && saved.conditions) {
+				conditions = saved.conditions.map(c => ({ rating: c.rating, label: c.label || '' }));
+				renderRatings();
+			}
+		} else if (urlParams.has('r')) {
+			const ratings = urlParams.get('r').split(',').map(v => parseInt(v)).filter(v => !isNaN(v) && v >= 0 && v <= 100);
+			conditions = ratings.map(r => ({ rating: r, label: '' }));
+			renderRatings();
+		}
+	</script>
+{{end}}
