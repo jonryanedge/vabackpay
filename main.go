@@ -142,7 +142,7 @@ func loadConfig() {
 	config.AppURL = os.Getenv("APP_URL")
 
 	if config.AppURL == "" {
-		config.AppURL = "http://localhost:8080"
+		config.AppURL = "http://127.0.0.1:8080"
 	}
 }
 
@@ -499,9 +499,9 @@ func main() {
 	http.Handle("/calculate", withHeaders(http.HandlerFunc(calculateHandler)))
 	http.Handle("/email", withHeaders(http.HandlerFunc(emailHandler)))
 
-	fmt.Println("Server starting on http://localhost:8080")
+	fmt.Println("Server starting on http://127.0.0.1:8080")
 	if config.Debug {
 		fmt.Println("DEBUG MODE: Emails will not be sent")
 	}
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe("127.0.0.1:8080", nil)
 }
